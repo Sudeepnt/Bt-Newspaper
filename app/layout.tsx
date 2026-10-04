@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BOUGHT Spotlight — Today's issue",
-  description: "A daily global business and technology issue, with a public stage for the people building what comes next.",
+  title: "BOUGHT Spotlight — The daily issue",
+  description: "One finite daily issue for the business and technology world.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
