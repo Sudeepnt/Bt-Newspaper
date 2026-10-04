@@ -195,3 +195,4 @@ button:focus-visible,select:focus-visible{outline-color:#766e64}
 @media(max-width:600px){.watch-play{box-shadow:0 0 0 6px #15131038}}
 html[data-reading-theme=night] .desk-cards button.current{border-color:var(--editorial-stone)}
 .signal-head span:last-child,.signal-foot span,.watch-presenter small b,.art-capital .cap-figure,.story-why b,.story-source b,.issue-search section small{color:var(--editorial-muted)}
+.section-heading>span{color:var(--editorial-muted)}
