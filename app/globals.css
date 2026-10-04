@@ -91,6 +91,65 @@ html{scroll-padding-top:74px}body{background:#f4f1ea;color:#151310;font-family:'
  .story-utility{gap:7px!important}
  .story-utility button{font-size:10px!important;padding:8px 5px!important}
 }
+
+/* Reader-selected page tone and the compact header theme control. */
+:root{--reading-canvas:#f4f1ea;--reading-surface:#fbf8f2;--reading-ink:#151310;--reading-muted:#70685e;--reading-line:#c9beaf;--reading-soft:#e4dccf}
+html[data-reading-theme=white]{--reading-canvas:#fff;--reading-surface:#fff;--reading-ink:#171717;--reading-muted:#5d5d5d;--reading-line:#d8d8d8;--reading-soft:#f1f1f1}
+html[data-reading-theme=night]{--reading-canvas:#171715;--reading-surface:#211f1c;--reading-ink:#f4f0e8;--reading-muted:#b9b1a7;--reading-line:#514a41;--reading-soft:#302c27;color-scheme:dark}
+html[data-reading-theme] body{background:var(--reading-canvas)!important;color:var(--reading-ink)}
+html[data-reading-theme] .topbar{background:var(--reading-canvas);color:var(--reading-ink);border-color:var(--reading-line)}
+html[data-reading-theme] .logo,html[data-reading-theme] .header-search{color:var(--reading-ink)}
+html[data-reading-theme] .topbar nav button,html[data-reading-theme] .edition-date,html[data-reading-theme] .lang-select{color:var(--reading-muted)}
+html[data-reading-theme] .topbar nav button.selected{color:var(--reading-ink)}
+html[data-reading-theme] .lang-select select{background:var(--reading-canvas);color:var(--reading-ink);border-color:var(--reading-line)}
+html[data-reading-theme] .paper,html[data-reading-theme] .magazine{background:var(--reading-canvas);color:var(--reading-ink)}
+html[data-reading-theme] .paper-topline,html[data-reading-theme] .paper-title strong,html[data-reading-theme] .cover-brief strong,html[data-reading-theme] .essential-grid h3,html[data-reading-theme] .row-title,html[data-reading-theme] .reader-toolbar h3,html[data-reading-theme] .magazine-heading h1,html[data-reading-theme] .archive-date-list button,html[data-reading-theme] .archive-inside button,html[data-reading-theme] .archive-note span{color:var(--reading-ink)}
+html[data-reading-theme] .paper-title,html[data-reading-theme] .issue-tools,html[data-reading-theme] .cover-grid,html[data-reading-theme] .section-label,html[data-reading-theme] .desk-reader,html[data-reading-theme] .reader-toolbar,html[data-reading-theme] .news-row,html[data-reading-theme] .desk-finish,html[data-reading-theme] .magazine-heading,html[data-reading-theme] .archive-date-list button,html[data-reading-theme] .archive-note,html[data-reading-theme] .archive-inside>div:last-child{border-color:var(--reading-line)}
+html[data-reading-theme] .story-sequence,html[data-reading-theme] .newsletter-sheet,html[data-reading-theme] .issue-search,html[data-reading-theme] .email-paper{background:var(--reading-surface)!important;color:var(--reading-ink)}
+html[data-reading-theme] .story-utility{background:var(--reading-surface)}
+html[data-reading-theme] .story-utility button:not(:last-child){background:var(--reading-soft);color:var(--reading-ink)}
+html[data-reading-theme] .share-fallback input,html[data-reading-theme] .subscribe-form input{background:var(--reading-canvas);color:var(--reading-ink);border-color:var(--reading-line)}
+html[data-reading-theme] .email-paper{border-color:var(--reading-line)}
+html[data-reading-theme] .theme-trigger{color:var(--reading-ink);border-color:var(--reading-line)}
+.theme-picker{position:relative;z-index:42}
+.theme-trigger{height:34px;display:flex;align-items:center;gap:7px;padding:0 9px;border:1px solid #c9beaf;background:transparent;color:#151310;font-size:10px;font-weight:800;white-space:nowrap;transition:background .15s ease,border-color .15s ease}
+.theme-trigger:hover{background:var(--reading-soft);border-color:var(--reading-muted)}
+.theme-current,.theme-preview{display:block;flex:none;width:12px;height:12px;border:1px solid #82796c;border-radius:50%}
+.theme-current.theme-paper,.theme-preview.theme-paper{background:#e9dfd0}
+.theme-current.theme-white,.theme-preview.theme-white{background:#fff}
+.theme-current.theme-night,.theme-preview.theme-night{background:#262522;border-color:#8d8478}
+.theme-menu{position:absolute;right:0;top:calc(100% + 9px);width:250px;padding:10px;background:var(--reading-surface);color:var(--reading-ink);border:1px solid var(--reading-line);box-shadow:0 18px 48px #17130f30;z-index:60}
+.theme-menu-title{display:block;padding:5px 8px 9px;font:9px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--reading-muted)}
+.theme-menu button{width:100%;display:flex;align-items:center;gap:10px;padding:9px 8px;text-align:left;border:0;background:transparent;color:var(--reading-ink)}
+.theme-menu button:hover,.theme-menu button.active{background:var(--reading-soft)}
+.theme-menu button>span{display:flex;flex-direction:column;gap:3px;flex:1}
+.theme-menu button b{font-size:12px}.theme-menu button small{font-size:10px;color:var(--reading-muted)}
+.theme-menu button>svg{color:#a83a20}
+html[data-reading-theme=night] .cover-brief small,html[data-reading-theme=night] .essential-grid p,html[data-reading-theme=night] .section-heading p,html[data-reading-theme=night] .row-copy p,html[data-reading-theme=night] .row-foot,html[data-reading-theme=night] .reader-toolbar small,html[data-reading-theme=night] .reader-rail button,html[data-reading-theme=night] .media-heading p,html[data-reading-theme=night] .watch-side p,html[data-reading-theme=night] .magazine-heading p,html[data-reading-theme=night] .archive-date-list button span,html[data-reading-theme=night] .archive-note p,html[data-reading-theme=night] .sheet-standfirst{color:var(--reading-muted)}
+html[data-reading-theme=night] .desk-cards button:not(.current),html[data-reading-theme=night] .watch-side,html[data-reading-theme=night] .picture-grid button,html[data-reading-theme=night] .watch-rail button,html[data-reading-theme=night] .archive-inside button{color:var(--reading-ink)}
+html[data-reading-theme=night] .reader-rail,html[data-reading-theme=night] .reader-rail button,html[data-reading-theme=night] .archive-date-list button,html[data-reading-theme=night] .archive-inside button,html[data-reading-theme=night] .email-paper>div,html[data-reading-theme=night] .email-paper button{border-color:var(--reading-line)}
+html[data-reading-theme=night] .saved-toggle,html[data-reading-theme=night] .issue-tools button:not(:first-of-type),html[data-reading-theme=night] .story-nav button:first-child{color:var(--reading-ink);border-color:var(--reading-line)}
+html[data-reading-theme=night] .email-paper button b,html[data-reading-theme=night] .email-paper button small,html[data-reading-theme=night] .email-paper footer,html[data-reading-theme=night] .email-paper>p{color:var(--reading-muted)}
+html[data-reading-theme=night] .story-card-copy p,html[data-reading-theme=night] .sheet-body section small{color:var(--reading-muted)!important}
+html[data-reading-theme=night] .story-visual-wrap{border-color:#514a41}
+@media(max-width:600px){
+ .topbar{gap:7px;padding:0 10px}
+ .theme-trigger{width:31px;height:32px;justify-content:center;padding:0;border-color:transparent;position:relative}
+ .theme-trigger .theme-label{display:none}
+ .theme-current{position:absolute;width:7px;height:7px;right:1px;bottom:2px}
+ .theme-menu{position:fixed;top:64px;right:10px;width:min(250px,calc(100vw - 20px))}
+ .top-actions{gap:4px}
+}
+@media(max-width:380px){
+ .topbar{gap:5px;padding:0 8px}
+ .logo{font-size:20px}
+ .topbar nav{gap:6px}
+ .topbar nav button{font-size:10px}
+ .top-actions{gap:2px}
+ .lang-select select{max-width:60px;padding:6px 13px 6px 5px}
+ .theme-trigger{width:27px}
+ .header-search svg{width:16px;height:16px}
+}
 @media(max-width:600px){
  .story-sequence{inset:auto!important;top:50%!important;right:auto!important;bottom:auto!important;left:50%!important;translate:-50% -50%!important;width:calc(100vw - 20px)!important;height:auto!important;max-height:calc(100dvh - 28px)!important;min-height:0!important;border:1px solid #d0c5b5!important;border-radius:4px!important;padding:13px 14px max(12px,env(safe-area-inset-bottom))!important;box-shadow:0 22px 75px #120e0b66!important;overflow:hidden!important}
  .story-sequence-body{flex:0 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:2px}
@@ -99,3 +158,12 @@ html{scroll-padding-top:74px}body{background:#f4f1ea;color:#151310;font-family:'
  .story-utility{position:static!important;margin-top:9px!important;padding-top:0!important}
  .newsletter-sheet{inset:auto!important;top:50%!important;right:auto!important;bottom:auto!important;left:50%!important;translate:-50% -50%!important;width:calc(100vw - 20px)!important;height:min(88dvh,820px)!important;max-height:calc(100dvh - 28px)!important;border:1px solid #d0c5b5!important;border-radius:4px!important;padding:14px!important;box-shadow:0 22px 75px #120e0b66!important}
 }
+
+
+/* Reading surfaces follow the selected theme, including the AI-journalist desk cards. */
+html[data-reading-theme=paper]{--reading-canvas:#f4f3ef;--reading-surface:#fbf9f4;--reading-ink:#171717;--reading-muted:#68645d;--reading-line:#d5cdbf;--reading-soft:#ece6dc}
+html[data-reading-theme=white]{--reading-surface:#fff}
+html[data-reading-theme=paper] .desk-cards button,html[data-reading-theme=white] .desk-cards button{background:var(--reading-surface);border-color:var(--reading-line)}
+html[data-reading-theme=night] .desk-cards button{background:var(--reading-surface);border-color:var(--reading-line);color:var(--reading-ink)}
+html[data-reading-theme=night] .desk-cards button.current{background:var(--reading-soft);border-color:#c64b32;color:var(--reading-ink)}
+html[data-reading-theme=night] .desk-cards button>span:first-child,html[data-reading-theme=night] .desk-cards button>span b,html[data-reading-theme=night] .desk-cards small{color:var(--reading-muted)}
