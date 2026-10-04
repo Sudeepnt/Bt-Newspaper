@@ -167,3 +167,31 @@ html[data-reading-theme=paper] .desk-cards button,html[data-reading-theme=white]
 html[data-reading-theme=night] .desk-cards button{background:var(--reading-surface);border-color:var(--reading-line);color:var(--reading-ink)}
 html[data-reading-theme=night] .desk-cards button.current{background:var(--reading-soft);border-color:#c64b32;color:var(--reading-ink)}
 html[data-reading-theme=night] .desk-cards button>span:first-child,html[data-reading-theme=night] .desk-cards button>span b,html[data-reading-theme=night] .desk-cards small{color:var(--reading-muted)}
+
+/* Keep red for live status and the small BOUGHT brand mark. */
+:root{--editorial-muted:#766e64;--editorial-stone:#928575}
+button:focus-visible,select:focus-visible{outline-color:#766e64}
+.topbar nav button.selected{border-color:#928575}
+.issue-tools>div span,.red-kicker,.essential-grid span,.cover-brief span,.media-heading>div>span,.watch-side>span,.story-card-copy>span,.story-sheet [data-slot=sheet-description],.newsletter-sheet [data-slot=sheet-description],.sheet-body section>span,.email-paper>p,.email-paper button small,.email-lead>span,.email-essentials>span,.email-complete>div>span,.email-section header b{color:var(--editorial-muted)}
+.anchor-copy>span{color:#d0c5b5}
+.desk-cards button>span:first-child{color:var(--editorial-muted)}
+.desk-cards button.current{border-color:var(--editorial-stone)}
+.desk-cards button>span b,.desk-cards small{color:#81796e}
+.story-segments button.current{background:var(--editorial-stone)}
+.story-journalist .reporter-avatar{border-color:#d5cdbf}
+.story-utility button:last-child{background:#151310}
+.theme-menu button>svg{color:var(--editorial-muted)}
+.reporter-avatar{--coat:#4d5558;box-shadow:0 0 0 2px #d5cdbf}
+.reporter-launches{--coat:#665c51}
+.art-bars span:nth-child(5),.art-capital i:nth-child(4){background:var(--editorial-stone);border-color:#d9d0c4}
+.art-bars i,.art-capital b,.art-founder span,.art-security b{color:#d9d0c4}
+.art-agents div:last-child,.art-flow span:last-child{background:#746b60;border-color:#a99c8c}
+.art-founder .founder-body{background:#746b60}
+.art-product{box-shadow:8px 8px 0 #c8bdae}
+.art-product>div i,.art-chip span,.art-security div span:nth-child(2),.art-security div span:nth-child(6){background:var(--editorial-stone)}
+.art-flow i{background:#a99c8c}
+.watch-play{background:#151310;box-shadow:0 0 0 9px #15131038}
+.watch-presenter .reporter-avatar{box-shadow:0 0 0 2px #d5cdbf}
+@media(max-width:600px){.watch-play{box-shadow:0 0 0 6px #15131038}}
+html[data-reading-theme=night] .desk-cards button.current{border-color:var(--editorial-stone)}
+.signal-head span:last-child,.signal-foot span,.watch-presenter small b,.art-capital .cap-figure,.story-why b,.story-source b,.issue-search section small{color:var(--editorial-muted)}
