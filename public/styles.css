@@ -322,7 +322,7 @@ body {
 .story-facts h3 { margin: 0 0 4px; color: #9a392f; font: 700 .6875rem/1.35 'DM Sans', Arial, sans-serif; letter-spacing: .055em; text-transform: uppercase; }
 .story-facts p { margin: 0; color: #625a51; font: 400 .8125rem/1.45 'DM Sans', Arial, sans-serif; }
 
-.spotlight-placement { margin: 26px 9px 30px; padding: 11px 0 0; border-top: 1px solid var(--rule); }
+.spotlight-placement { margin: 26px 9px 30px; padding: 11px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
 .spotlight-label { display: flex; align-items: center; gap: 7px; margin: 0 0 10px; color: #3d3b37; font: 700 .6875rem/1.2 'DM Sans', Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
 .spotlight-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #d43b36; }
 .spotlight-placement img { display: block; width: 100%; height: auto; aspect-ratio: 1834 / 1029; border-radius: 7px; background: #0b0b0b; }
