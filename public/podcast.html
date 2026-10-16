@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#efece5">
+  <title>Bought. — Today's Brief</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="podcast.css">
+</head>
+<body class="podcast-body">
+  <main class="page podcast-page">
+    <div class="sticky-masthead">
+      <header class="masthead">
+        <span class="wordmark">Bought.</span>
+        <div class="issue-date">
+          <div class="date-copy">
+            <span class="weekday">Tuesday</span>
+            <time datetime="2026-10-13">October 13, 2026</time>
+          </div>
+        </div>
+        <div class="language-picker">
+          <button class="language-trigger" type="button" aria-label="Change language, English" aria-haspopup="dialog" aria-controls="language-menu" aria-expanded="false">
+            <svg class="globe-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M3 12h18M12 3c2.5 2.5 3.7 5.5 3.7 9S14.5 18.5 12 21c-2.5-2.5-3.7-5.5-3.7-9S9.5 5.5 12 3Z" />
+            </svg>
+            <span class="language-name">English</span>
+            <svg class="chevron-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m3 6 5 5 5-5" /></svg>
+          </button>
+          <div class="language-menu" id="language-menu" role="dialog" aria-label="Choose issue language" hidden>
+            <div class="menu-heading">Read in your language</div>
+            <div class="language-options"></div>
+          </div>
+        </div>
+      </header>
+      <div class="newspaper-rules" aria-hidden="true"></div>
+    </div>
+
+    <nav class="view-switch" aria-label="Issue format">
+      <a class="view-option" href="index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="3" y="3" width="18" height="18" rx="1.5" />
+          <rect x="6.5" y="7" width="4.5" height="5" />
+          <path d="M14 7h4M14 10h4M6.5 15h11.5M6.5 18h11.5" />
+        </svg>
+        <span>Newspaper</span>
+      </a>
+      <button class="view-option is-active" type="button" aria-pressed="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M3 10v4M7 7v10M11 3v18M15 8v8M19 5v14M23 10v4" />
+        </svg>
+        <span>Podcast</span>
+      </button>
+    </nav>
+
+    <section class="brief" aria-labelledby="brief-title">
+      <div class="brief-cover">
+        <p class="brief-eyebrow">The daily brief</p>
+        <h1 id="brief-title">Today’s Bought Brief</h1>
+        <p class="brief-subtitle">50 headlines in 7 min</p>
+        <p class="brief-intro">A quick audio briefing of today’s most important technology, business, and AI stories.</p>
+      </div>
+
+      <div class="brief-player" role="group" aria-label="Daily brief player">
+        <div class="player-controls">
+          <button class="skip-button" type="button" data-skip="-15" aria-label="Go back 15 seconds">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M12 14a13 13 0 1 1-4 9"/><path d="m13 8-4 6 7 1"/><text x="20" y="26">15</text></svg>
+          </button>
+          <span class="waveform waveform-left" aria-hidden="true"></span>
+          <button class="play-main" id="play-main" type="button" aria-label="Play daily brief">
+            <svg class="play-symbol" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg>
+            <svg class="pause-symbol" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+          </button>
+          <span class="waveform waveform-right" aria-hidden="true"></span>
+          <button class="skip-button" type="button" data-skip="15" aria-label="Skip ahead 15 seconds">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M28 14a13 13 0 1 0 4 9"/><path d="m27 8 4 6-7 1"/><text x="20" y="26">15</text></svg>
+          </button>
+          <button class="speed-button" id="speed-button" type="button" aria-label="Playback speed, 1 times">1×</button>
+        </div>
+
+        <input class="player-progress" id="player-progress" type="range" min="0" max="428" value="42" aria-label="Playback position">
+        <div class="player-times"><time id="elapsed-time">0:42</time><time>7:08</time></div>
+
+        <div class="brief-facts" aria-label="Brief details">
+          <div>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h8M8 18h5"/></svg>
+            <span><strong>50</strong><small>Stories</small></span>
+          </div>
+          <div>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span><strong>7 min</strong><small>Listen time</small></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lineup" aria-labelledby="lineup-title">
+      <div class="lineup-rule" aria-hidden="true"></div>
+      <div class="lineup-kicker"><span>In this brief</span><span>50 headlines</span></div>
+      <h2 id="lineup-title">Today’s lineup.</h2>
+      <ol class="headline-list" id="headline-list" tabindex="0" aria-label="Scroll through all 50 headlines"></ol>
+    </section>
+  </main>
+  <script src="language.js"></script>
+  <script src="podcast.js"></script>
+</body>
+</html>
