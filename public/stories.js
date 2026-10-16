@@ -366,6 +366,14 @@ const escapeStoryText = (value) => String(value).replace(/[&<>"']/g, (character)
 
 const microphoneIcon = '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect x="12" y="4" width="8" height="16" rx="4"/><path d="M8 15a8 8 0 0 0 16 0M16 23v5M11 28h10"/></svg>';
 
+function renderSpotlightPlacement(number) {
+  return `
+    <figure class="spotlight-placement" id="spotlight-${number}" aria-label="Bought Spotlight placement">
+      <figcaption class="spotlight-label">Bought Spotlight <span class="spotlight-dot" aria-hidden="true"></span></figcaption>
+      <img src="assets/bought-spotlight-placement.webp" alt="A presenter on screen with the quote: Your design system is productivity theatre." loading="lazy">
+    </figure>`;
+}
+
 function renderStory(story, number, saveKey = number) {
   const loading = number === 1 ? 'eager' : 'lazy';
   return `
@@ -445,7 +453,7 @@ function renderGlances() {
     visualCounts[story.category] = visualIndex + 1;
     const image = visualSet[visualIndex % visualSet.length];
     const imageSide = index % 2 === 0 ? 'start' : 'end';
-    return `
+    const item = `
       <article class="glance-item${story.deck ? '' : ' is-brief'} is-image-${imageSide}" id="story-${number}" aria-labelledby="glance-title-${number}">
         <div class="glance-visual" aria-hidden="true"><img src="${image}" alt="" loading="${index < 4 ? 'eager' : 'lazy'}"></div>
         <div class="glance-copy">
@@ -457,6 +465,7 @@ function renderGlances() {
           <div><h4>Why it matters</h4><p>${escapeStoryText(story.matters)}</p></div>
         </div>
       </article>`;
+    return item + (index === 4 ? renderSpotlightPlacement(4) : '');
   }).join('');
 
   return `<section class="glance-section" aria-labelledby="glance-heading">
@@ -470,9 +479,10 @@ const storiesRoot = document.querySelector('#edition-stories');
 storiesRoot.innerHTML = [
   `<section class="prime-section" aria-labelledby="prime-heading">
     <header class="section-marker prime-marker"><h2 id="prime-heading">The Prime</h2></header>
-    ${sampleStories.map((story, index) => renderStory(story, index + 1)).join('')}
+    ${sampleStories.map((story, index) => renderStory(story, index + 1) + (index === 4 ? renderSpotlightPlacement(1) : index === 9 ? renderSpotlightPlacement(2) : '')).join('')}
   </section>`,
   renderImageCarousel(),
+  renderSpotlightPlacement(3),
   renderGlances(),
 ].join('');
 
