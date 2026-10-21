@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#efece5">
+  <title>Bought. — Live pipeline feed</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .live-note { font: 400 .8rem/1.4 'DM Sans', Arial, sans-serif; color: #5c574d; padding: 10px 0 0; }
+    .live-video { display: block; width: 100%; height: 100%; object-fit: cover; background: #07121f; }
+    .live-source { font: 400 .78rem/1.4 'DM Sans', Arial, sans-serif; color: #5c574d; margin-top: 8px; }
+    .live-source a { color: inherit; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead"><span class="wordmark">Bought.</span></header>
+    <p class="live-note" id="note">Loading prime stories from the pipeline feed…</p>
+    <div id="stories"></div>
+  </main>
+  <script>
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    fetch('live/feed.json').then(r => r.json()).then(feed => {
+      const n = feed.prime.length;
+      document.getElementById('note').textContent =
+        `${n} prime stories · generated ${feed.generated_at} · presenter video replaces the story image`;
+      document.getElementById('stories').innerHTML = feed.prime.map((s, i) => `
+        <article class="lead-story">
+          <div class="video-poster">
+            ${s.video_url
+              ? `<video class="live-video" src="${esc(s.video_url)}" controls playsinline preload="metadata"></video>`
+              : `<img class="hero-image" src="${esc(s.image_url)}" alt="">`}
+            <span class="video-story-number">${i + 1} / ${n}</span>
+          </div>
+          <div class="story-copy">
+            <div class="story-meta"><span class="story-section">${esc(s.category)}</span></div>
+            <h2>${esc(s.headline)}</h2>
+            <p class="story-deck">${esc(s.summary)}</p>
+            <p class="live-source">${esc(s.source)} · <a href="${esc(s.link)}" rel="noopener">Read at source</a>${s.duration_s ? ` · ${Math.round(s.duration_s)}s` : ''}</p>
+          </div>
+        </article>`).join('');
+    }).catch(() => { document.getElementById('note').textContent = 'No feed yet. Run the pipeline first.'; });
+  </script>
+</body>
+</html>

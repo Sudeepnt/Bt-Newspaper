@@ -51,6 +51,10 @@ class Config:
     media_time_budget_seconds: float = 900     # keeps a 30-min cron from overlapping itself
     media_max_attempts: int = 3
     script_max_chars: int = 600
+    # Phase 2b: presenter video (needs media_enabled). Paths are relative to the project root.
+    avatar_enabled: bool = False
+    avatar_image: str = "public/assets/ai-presenter.jpg"
+    avatar_size: tuple = (1100, 500)           # matches the newspaper's 2.2:1 video slot
 
 
 def load_config(path=None) -> Config:
@@ -61,6 +65,8 @@ def load_config(path=None) -> Config:
         raise ConfigError(f"unknown config keys: {sorted(unknown)}")
     if isinstance(raw.get("tts_command"), list):
         raw["tts_command"] = tuple(map(str, raw["tts_command"]))
+    if isinstance(raw.get("avatar_size"), list):
+        raw["avatar_size"] = tuple(raw["avatar_size"])
     cfg = Config(**raw)
     if set(cfg.slots) != {"prime", "cards", "glance"} or any(
         not isinstance(n, int) or n < 0 for n in cfg.slots.values()
@@ -68,6 +74,8 @@ def load_config(path=None) -> Config:
         raise ConfigError("slots must define non-negative ints for prime, cards, glance")
     if not 0 < cfg.category_cap <= 1:
         raise ConfigError("category_cap must be in (0, 1]")
+    if cfg.avatar_enabled and not cfg.media_enabled:
+        raise ConfigError("avatar_enabled needs media_enabled (the video is driven by the audio)")
     if cfg.media_enabled and not cfg.tts_command:
         raise ConfigError("media_enabled needs tts_command")
     return cfg

@@ -41,3 +41,6 @@ Not verified: licenses of newer versions pulled by a fresh `pip install` on the 
 | piper-tts 1.8.0 | **GPL-3.0-or-later** | installed in its own venv, run as a subprocess |
 | Piper voice en_US-lessac-medium | check model card | per-voice licence, not verified here |
 | ffmpeg / ffprobe | LGPL-2.1+ or GPL (build dependent) | used as a subprocess; use an LGPL build |
+| Pillow >=10 (avatar only) | HPND | requirements-media.txt |
+| numpy (avatar only) | BSD-3-Clause | requirements-media.txt |
+| libx264 (inside ffmpeg) | GPL-2.0+ | subprocess; needed for H.264 MP4 output |

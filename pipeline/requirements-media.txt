@@ -1,0 +1,3 @@
+# Optional, only for avatar_enabled (Phase 2b)
+Pillow>=10         # HPND
+numpy>=1.24        # BSD-3-Clause

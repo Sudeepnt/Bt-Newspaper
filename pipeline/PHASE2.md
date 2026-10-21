@@ -4,7 +4,10 @@
 - **2a script + audio: built and tested** (`media.py`). Every prime item gets a `script`, and once audio exists,
   `audio_url` and `duration_s`. Verified end to end with Piper (`en_US-lessac-medium`): 25 stories in ~28 s on a
   laptop (about 1 s per story); not yet timed on the 2 vCPU VPS.
-- **2b avatar video: NOT started.** Waiting on the open questions at the bottom.
+- **2b avatar video: built as the cheap option 1** (`avatar.py`, `avatar_enabled`). The presenter photo
+  (`public/assets/ai-presenter.jpg`) gets a 2D mouth-flap driven by speech loudness, muxed with the audio into an
+  MP4 (1100x500, H.264/AAC). ~0.5 s per story on CPU. It is stylised, **not true lip-sync**; real lip-sync
+  (Wav2Lip etc.) still needs a GPU and a licence check. Demo page: `public/live.html`.
 - Engine is any command set as `tts_command` in `config.yaml` (script on stdin, writes `{wav}`), so Piper or
   Kokoro can be swapped without code changes. Audio is rebuilt only when the script text changes; failures are
   retried up to `media_max_attempts`, and the feed stays valid without audio.
