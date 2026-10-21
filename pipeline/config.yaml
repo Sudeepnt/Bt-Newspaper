@@ -34,3 +34,20 @@ avatar_image: "pipeline/assets/presenter_cutout.png"
 avatar_size: [1280, 720]   # 16:9 (720p)
 avatar_channel: "BOUGHT."
 avatar_cutaway_chance: 0.6   # 0 = never go full screen
+
+# One look per category (host + set), so videos are told apart at a glance. Delete this block for the original look everywhere.
+# Categories not listed here rotate through these looks, picked by story id.
+avatar_looks:
+  Technology:          {character: photo,  style: studio}    # presenter photo, blue studio
+  AI:                  {character: mascot, style: funky}     # drawn mascot, sticker set with captions
+  Tech business:       {character: anime,  style: channel}   # anime anchor, TV news set with ticker
+  Founders & startups: {character: anime,  style: funky}
+  Product launches:    {character: mascot, style: studio}
+
+# Badges on stories (AI, New, Exclusive, and Most viewed / read / glanced once the page's collector writes engagement_file).
+badges_enabled: true
+badges_exclusive_sources: []        # outlets we have an exclusive arrangement with; nothing is "Exclusive" otherwise
+badges_new_hours: 3
+badges_min_events: 30               # a "most" badge needs at least this many views/reads/glances
+engagement_file: ""                 # JSON {article_id: {views, reads, glances}}
+

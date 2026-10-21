@@ -116,16 +116,8 @@ def make_clip(spec_path, cfg, dry_run=True, feed_path=None) -> dict:
     name = spec["name"]
     mp3, mp4 = media / f"{name}.mp3", media / f"{name}.mp4"
     duration, moods, script, cuts, laughs, caps = build_audio(spec, cfg, mp3)
-    char = spec.get("character", "photo")
-    if char == "mascot":
-        from .mascot import MascotPresenter
-        presenter = MascotPresenter(size=tuple(cfg.avatar_size))
-    elif char == "anime":
-        from .anime import AnimePresenter
-        big = {"scale": 0.95, "origin": (8, 18)} if spec.get("style") == "channel" else {}      # channel: anchor ~20% of the frame, pushed left
-        presenter = AnimePresenter(_resolve(spec.get("cutout", "pipeline/assets/anime/cutout_raw.png")), tuple(cfg.avatar_size), **big)
-    else:
-        presenter = Presenter(_resolve(cfg.avatar_image), tuple(cfg.avatar_size))
+    from .styles import build_presenter
+    presenter = build_presenter(spec.get("character", "photo"), spec.get("style", "studio"), cfg, _resolve)
     shot = Image.open(_resolve(spec["image"])).convert("RGB")
     style = spec.get("style", "studio")
     if style == "studio":

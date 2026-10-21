@@ -83,3 +83,24 @@ def jaccard(a: frozenset, b: frozenset) -> float:
     if not a or not b:
         return 0.0
     return len(a & b) / len(a | b)
+
+
+def spoken_summary(headline: str, summary: str) -> str:
+    """The summary as it should be read aloud right after the headline: never the headline a second time.
+    A blurb that opens by repeating the headline ("<headline> is drawing attention across the industry. ...") loses that
+    opening: the repeated headline goes, and so does what is left of the sentence if it is only a fragment
+    ("is drawing attention ..."), so the listener hears each thing once."""
+    def norm(t):
+        return re.sub(r"[^a-z0-9 ]+", "", t.lower()).split()
+    head, summary = " ".join((headline or "").split()), " ".join((summary or "").split())
+    if not head or not summary:
+        return summary
+    sentences = re.split(r"(?<=[.!?])\s+", summary)
+    first, rest = sentences[0], sentences[1:]
+    hw, fw = norm(head), norm(first)
+    if fw[:len(hw)] == hw:                                   # the first sentence starts with the headline
+        remainder = first[len(head):].lstrip(" ,:;-\u2013\u2014") if first.lower().startswith(head.lower()) else ""
+        words = remainder.split()
+        # something real is left only if it reads as a sentence of its own (starts a capital, e.g. "The deal...")
+        sentences = ([remainder] if words and words[0][:1].isupper() else []) + rest
+    return " ".join(s for s in sentences if s)

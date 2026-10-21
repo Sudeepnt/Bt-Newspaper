@@ -21,6 +21,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .media import _run
+from .text import spoken_summary
 
 log = logging.getLogger(__name__)
 RATE = 24000
@@ -58,7 +59,7 @@ def story_script(item: dict, number: int, previous_category: str, max_chars: int
         lead = f"Now, {cat}."
     else:
         lead = "Next."
-    parts = [f"Story {number}.", lead, _sentence(item["headline"]), _sentence(item.get("summary", ""))]
+    parts = [f"Story {number}.", lead, _sentence(item["headline"]), _sentence(spoken_summary(item["headline"], item.get("summary", "")))]
     if item.get("source"):
         parts.append(f"From {item['source']}.")
     text = " ".join(p for p in parts if p)

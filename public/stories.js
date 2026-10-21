@@ -105,6 +105,7 @@ const imageStories = [
   {
     category: 'Business',
     title: 'Starship takes flight as reusable rocket ambitions grow',
+    badges: [{ id: 'most-viewed', label: 'Most viewed' }, { id: 'new', label: 'New' }],
     deck: 'The launch puts attention on rapid turnaround, recovery, and the next phase of space travel.',
     matters: 'Reliable reuse could lower the cost and increase the pace of future launches.',
     image: 'assets/swipe-rocket.jpg',
@@ -188,12 +189,14 @@ const glanceStories = [
   {
     category: 'Tech business',
     title: 'The chip race moves beyond the processor',
+    badges: [{ id: 'most-glanced', label: 'Most glanced' }],
     deck: 'Memory, power, and cooling are becoming just as important to AI infrastructure.',
     matters: 'The next performance gains may come from the whole system, not one chip.',
   },
   {
     category: 'AI',
     title: 'Agents find a place in everyday work',
+    badges: [{ id: 'ai', label: 'AI' }, { id: 'most-read', label: 'Most read' }],
     deck: 'Teams are testing where software can handle a complete task, not just a prompt.',
     matters: 'Useful automation depends on reliable handoffs and clear human control.',
   },
@@ -364,6 +367,20 @@ const escapeStoryText = (value) => String(value).replace(/[&<>"']/g, (character)
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 })[character]);
 
+// Badges come from the pipeline (feed item.badges: [{id, label}]); the samples below carry a few by hand.
+const badgeIcons = {
+  exclusive: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m8 1 2.1 4.6 5 .6-3.7 3.4 1 5L8 12.1 3.6 14.6l1-5L.9 6.2l5-.6z"/></svg>',
+  ai: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 1.5 7.3 5 11 6.3 7.3 7.6 6 11.2 4.7 7.6 1 6.3 4.7 5zM12 8.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',
+  new: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="4"/></svg>',
+  'most-viewed': '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8.6 1c.3 2.2-.6 3.3-1.8 4.6C5.700 6.900 4.500 8.100 4.500 10a3.500 3.500 0 0 0 7 0c0-1.500-.6-2.500-1.400-3.400-.2.900-.7 1.400-1.300 1.600.5-2.300.2-4.700-.2-7.200z"/></svg>',
+  'most-read': '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 2.500h4.500A1.500 1.500 0 0 1 8 4v9.500a1.500 1.500 0 0 0-1.500-1.500H2zm12 0H9.500A1.500 1.500 0 0 0 8 4v9.500a1.500 1.500 0 0 1 1.500-1.500H14z"/></svg>',
+  'most-glanced': '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 3C4.500 3 2 6.100 1 8c1 1.900 3.500 5 7 5s6-3.100 7-5c-1-1.900-3.500-5-7-5zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0-1.500a1.500 1.500 0 1 0 0-3 1.500 1.500 0 0 0 0 3z"/></svg>',
+};
+const renderBadges = (badges) => (badges && badges.length)
+  ? `<span class="badges">${badges.map((badge) => `<span class="badge badge-${escapeStoryText(badge.id)}">${badgeIcons[badge.id] || ''}${escapeStoryText(badge.label)}</span>`).join('')}</span>`
+  : '';
+const categoryClass = (category) => `cat-${String(category).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+
 const microphoneIcon = '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect x="12" y="4" width="8" height="16" rx="4"/><path d="M8 15a8 8 0 0 0 16 0M16 23v5M11 28h10"/></svg>';
 
 function renderSpotlightPlacement(number) {
@@ -385,6 +402,7 @@ if (window.liveFeed && window.liveFeed.prime && window.liveFeed.prime.length) {
     imagePosition: 'center 42%',
     video: item.video_url || '',
     poster: item.poster_url || '',
+    badges: item.badges || [],
     audio: item.audio_url || '',
     source: item.source,
     link: item.link,
@@ -394,7 +412,7 @@ if (window.liveFeed && window.liveFeed.prime && window.liveFeed.prime.length) {
 function renderStory(story, number, saveKey = number) {
   const loading = number === 1 ? 'eager' : 'lazy';
   return `
-    <article class="lead-story" id="story-${number}" aria-labelledby="story-title-${number}" data-story-number="${number}" data-save-key="${saveKey}">
+    <article class="lead-story ${categoryClass(story.category)}" id="story-${number}" aria-labelledby="story-title-${number}" data-story-number="${number}" data-save-key="${saveKey}">
       <div class="video-poster${story.video ? ' has-video' : ''}">
         ${story.video
           ? `<video class="hero-image" src="${escapeStoryText(story.video)}" ${story.poster ? `poster="${escapeStoryText(story.poster)}" preload="none"` : 'preload="metadata"'} playsinline disablepictureinpicture disableremoteplayback aria-label="AI journalist presenting: ${escapeStoryText(story.title)}"></video>`
@@ -415,7 +433,7 @@ function renderStory(story, number, saveKey = number) {
 
       <div class="story-copy">
         <div class="story-meta">
-          <span class="story-section">${escapeStoryText(story.category)}</span>
+          <span class="story-tags"><span class="story-section">${escapeStoryText(story.category)}</span>${renderBadges(story.badges)}</span>
           <div class="story-actions">
             <button class="story-action" type="button" data-action="save" aria-label="Save story ${number}" aria-pressed="false" title="Save story">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 4.5h12v15l-6-4-6 4z" /></svg>
@@ -428,7 +446,7 @@ function renderStory(story, number, saveKey = number) {
         <h2 id="story-title-${number}"><button class="story-title-button" type="button" data-open-story="${number}" aria-label="Read full story: ${escapeStoryText(story.title)}">${escapeStoryText(story.title)}</button></h2>
         <p class="story-deck">${escapeStoryText(story.deck)}</p>
         ${story.link
-          ? `<p class="story-source">${escapeStoryText(story.source)} · <a href="${escapeStoryText(story.link)}" rel="noopener" target="_blank">Read at source</a></p>`
+          ? ''
           : `<div class="story-facts">
           <div><h3>What happened</h3><p>${escapeStoryText(story.happened)}</p></div>
           <div><h3>Why it matters</h3><p>${escapeStoryText(story.matters)}</p></div>
@@ -441,11 +459,11 @@ function renderImageCarousel() {
   const slides = imageStories.map((story, index) => {
     const number = index + sampleStories.length + 1;
     return `
-      <article class="swipe-slide" id="story-${number}" aria-labelledby="swipe-title-${number}" aria-hidden="${index !== 0}" ${index !== 0 ? 'inert' : ''}>
+      <article class="swipe-slide ${categoryClass(story.category)}" id="story-${number}" aria-labelledby="swipe-title-${number}" aria-hidden="${index !== 0}" ${index !== 0 ? 'inert' : ''}>
         <img class="swipe-image" src="${story.image}" alt="${escapeStoryText(story.alt)}" loading="lazy" draggable="false">
         <span class="swipe-story-number" aria-label="Story ${number} of 50">${number} / 50</span>
         <div class="swipe-copy">
-          <span class="swipe-category">${escapeStoryText(story.category)}</span>
+          <span class="swipe-tags"><span class="swipe-category">${escapeStoryText(story.category)}</span>${renderBadges(story.badges)}</span>
           <h2 id="swipe-title-${number}"><button class="story-title-button" type="button" data-open-story="${number}" aria-label="Read full story: ${escapeStoryText(story.title)}">${escapeStoryText(story.title)}</button></h2>
           <div class="swipe-facts">
             <div><h3>What happened</h3><p>${escapeStoryText(story.deck)}</p></div>
@@ -480,10 +498,10 @@ function renderGlances() {
     const image = visualSet[visualIndex % visualSet.length];
     const imageSide = index % 2 === 0 ? 'start' : 'end';
     const item = `
-      <article class="glance-item${story.deck ? '' : ' is-brief'} is-image-${imageSide}" id="story-${number}" aria-labelledby="glance-title-${number}">
+      <article class="glance-item ${categoryClass(story.category)}${story.deck ? '' : ' is-brief'} is-image-${imageSide}" id="story-${number}" aria-labelledby="glance-title-${number}">
         <div class="glance-visual" aria-hidden="true"><img src="${image}" alt="" loading="${index < 4 ? 'eager' : 'lazy'}"></div>
         <div class="glance-copy">
-          <div class="glance-meta"><span class="glance-category">${escapeStoryText(story.category)}</span><span class="glance-number" aria-label="Story ${number} of 50">${number} / 50</span></div>
+          <div class="glance-meta"><span class="glance-tags"><span class="glance-category">${escapeStoryText(story.category)}</span>${renderBadges(story.badges)}</span><span class="glance-number" aria-label="Story ${number} of 50">${number} / 50</span></div>
           <h3 id="glance-title-${number}"><button class="story-title-button" type="button" data-open-story="${number}" aria-label="Read full story: ${escapeStoryText(story.title)}">${escapeStoryText(story.title)}</button></h3>
         </div>
         <div class="glance-facts">

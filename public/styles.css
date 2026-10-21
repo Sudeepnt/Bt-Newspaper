@@ -496,8 +496,6 @@ html.is-reading, html.is-reading body { overflow: hidden; }
   .story-facts > div + div { padding: 12px 0 0; border-top: 1px solid #d5d0c6; border-left: 0; }
 }
 
-.story-source { margin: 10px 0 0; font: 400 .8rem/1.4 'DM Sans', Arial, sans-serif; color: #5c574d; }
-.story-source a { color: inherit; }
 
 .video-poster.has-video { aspect-ratio: 16 / 9; background: #000; }
 /* Like YouTube: fit the whole frame (never crop the headline bar); spare space becomes black bars */
@@ -538,7 +536,6 @@ html.is-reading, html.is-reading body { overflow: hidden; }
   .story-deck { font-size: 1.0625rem; }
   article.lead-story:nth-of-type(1) .story-copy h2 { font-size: 2.75rem; line-height: 1.06; letter-spacing: -.04em; }
   article.lead-story:nth-of-type(1) .story-deck { margin-top: 12px; font-size: 1.3125rem; }
-  .story-source { font-size: .875rem; }
   article.lead-story:nth-of-type(2) .story-deck, article.lead-story:nth-of-type(3) .story-deck { display: none; }   /* the side stories are headline + source, so the column matches the lead's height */
 
   /* Image stories: a wide banner instead of a full-height phone card */
@@ -624,4 +621,40 @@ html.is-reading, html.is-reading body { overflow: hidden; }
   }
   .spotlight-placement::before { margin-bottom: 16px; }
   .spotlight-placement::after { margin-top: 18px; }
+}
+
+/* Badges and category colours: each story says what it is at a glance */
+.lead-story, .swipe-slide, .glance-item { --cat: #ad4038; --cat-light: #ff8f85; }
+.cat-ai { --cat: #6a4cd8; --cat-light: #b9a8ff; }
+.cat-technology { --cat: #1f63c4; --cat-light: #8ebcff; }
+.cat-tech-business { --cat: #17805c; --cat-light: #7fdcb6; }
+.cat-founders-startups { --cat: #c25a14; --cat-light: #ffb27a; }
+.cat-product-launches { --cat: #b02e7c; --cat-light: #ff9bd2; }
+.cat-tech-geopolitics { --cat: #8a3b3b; --cat-light: #ffa3a3; }
+.cat-business { --cat: #7a5a12; --cat-light: #ffd479; }
+.story-section { color: var(--cat); }
+.glance-category { color: var(--cat); }
+.swipe-category { color: var(--cat-light); }
+.story-tags, .swipe-tags, .glance-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 8px; min-width: 0; }
+.badges { display: inline-flex; flex-wrap: wrap; gap: 5px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 6px; border-radius: 999px; font: 700 .625rem/1.35 'DM Sans', Arial, sans-serif; letter-spacing: .045em; text-transform: uppercase; white-space: nowrap; }
+.badge svg { flex: none; width: 11px; height: 11px; fill: currentColor; }
+.badge-exclusive { background: #15110a; color: #f4c455; box-shadow: inset 0 0 0 1px #f4c45566; }
+.badge-ai { background: linear-gradient(90deg, #6a4cd8, #2f86e6); color: #fff; }
+.badge-new { background: #fff1ef; color: #c6382e; box-shadow: inset 0 0 0 1px #efc2bc; }
+.badge-new svg { width: 7px; height: 7px; }
+.badge-most-viewed { background: #ff7a1a; color: #fff; }
+.badge-most-read { background: #1d6b4f; color: #fff; }
+.badge-most-glanced { background: #0e8a96; color: #fff; }
+.swipe-tags .badge-new { background: #ffffff26; color: #fff; box-shadow: inset 0 0 0 1px #ffffff66; }
+@media (min-width: 900px) {
+  .lead-story { border-top: 3px solid var(--cat); }
+  .glance-item { border-top-color: var(--cat); }
+}
+
+/* Pointing anywhere at a story underlines its title (mouse/trackpad only: phones have no hover) */
+@media (hover: hover) {
+  .lead-story:hover .story-title-button, .glance-item:hover .story-title-button, .swipe-slide:hover .story-title-button {
+    text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px;
+  }
 }

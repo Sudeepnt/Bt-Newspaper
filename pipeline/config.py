@@ -57,6 +57,12 @@ class Config:
     podcast_speed: float = 1.0
     podcast_gap_seconds: float = 0.7
     podcast_time_budget_seconds: float = 1500
+    # Badges on stories (see badges.py). Off by default; the "most" badges need engagement_file from the page's collector.
+    badges_enabled: bool = False
+    badges_exclusive_sources: tuple = ()
+    badges_new_hours: float = 3
+    badges_min_events: int = 30
+    engagement_file: str = ""
     # Phase 2b: presenter video (needs media_enabled). Paths are relative to the project root.
     avatar_enabled: bool = False
     avatar_image: str = "pipeline/assets/presenter_cutout.png"   # transparent PNG, 1280x720 design space
@@ -64,6 +70,9 @@ class Config:
     avatar_font: str = "public/assets/font-0.ttf"
     avatar_channel: str = "BOUGHT."
     avatar_cutaway_chance: float = 0.6         # share of stories where the visual goes full screen and she steps out
+    # A look per category = which host and which set: {category: {character: photo|anime|mascot, style: studio|channel|funky}}.
+    # Empty = every video uses the original photo presenter in the blue studio. Unlisted categories rotate through the looks.
+    avatar_looks: dict = field(default_factory=dict)
     avatar_fallback_keywords: dict = field(default_factory=lambda: {   # stand-in picture -> words that pick it
         "public/assets/swipe-data-center.jpg": ["chip", "chips", "chipmakers", "processors", "data", "cloud", "server",
                                                 "servers", "capacity", "computing", "quantum", "semiconductor", "network", "operating",
@@ -90,6 +99,8 @@ def load_config(path=None) -> Config:
         raise ConfigError(f"unknown config keys: {sorted(unknown)}")
     if isinstance(raw.get("tts_command"), list):
         raw["tts_command"] = tuple(map(str, raw["tts_command"]))
+    if isinstance(raw.get("badges_exclusive_sources"), list):
+        raw["badges_exclusive_sources"] = tuple(map(str, raw["badges_exclusive_sources"]))
     if isinstance(raw.get("avatar_fallback_images"), list):
         raw["avatar_fallback_images"] = tuple(raw["avatar_fallback_images"])
     if isinstance(raw.get("avatar_size"), list):
@@ -101,6 +112,10 @@ def load_config(path=None) -> Config:
         raise ConfigError("slots must define non-negative ints for prime, cards, glance")
     if not 0 < cfg.category_cap <= 1:
         raise ConfigError("category_cap must be in (0, 1]")
+    for cat, look in cfg.avatar_looks.items():
+        if not isinstance(look, dict) or look.get("character") not in ("photo", "anime", "mascot") \
+                or look.get("style") not in ("studio", "channel", "funky"):
+            raise ConfigError(f"avatar_looks[{cat!r}] needs character: photo|anime|mascot and style: studio|channel|funky")
     if cfg.avatar_enabled and not cfg.media_enabled:
         raise ConfigError("avatar_enabled needs media_enabled (the video is driven by the audio)")
     if cfg.podcast_enabled and not cfg.tts_command:

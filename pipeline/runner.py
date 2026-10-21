@@ -9,6 +9,7 @@ from . import db
 from .dedupe import dedupe
 from .ingest import FixtureFetcher, LiveFetcher, ingest_all, iso
 from .media import attach_media, build_media
+from .badges import assign_badges
 from .output import build_feed, write_feed
 from .podcast import attach_podcast, build_podcast
 from .scoring import prefilter, select
@@ -51,6 +52,8 @@ def run_cycle(cfg, sources, dry_run=False, now=None, db_path=None, out_path=None
         if cfg.media_enabled:
             media = build_media(conn, cfg, feed, out_path.parent / "media", iso(now), fetch_images=not dry_run)
             attach_media(conn, cfg, feed)
+        if cfg.badges_enabled:
+            assign_badges(cfg, feed)
         podcast = None
         if cfg.podcast_enabled:
             cache = ROOT / "data" / ("podcast_dry_run" if dry_run else "podcast")

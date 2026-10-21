@@ -477,11 +477,45 @@ class Funky:
                 x += widths[j] + gap
 
 
+# ---------------------------------------------------------------- presenters and looks
+
+CHARACTERS = ("photo", "anime", "mascot")
+STYLES = ("studio", "channel", "funky")
+
+
+def build_presenter(character, style, cfg, resolve):
+    """The host for a look. The anime anchor is drawn larger and to the left for the channel set (as in the clips)."""
+    size = tuple(cfg.avatar_size)
+    if character == "mascot":
+        from .mascot import MascotPresenter
+        return MascotPresenter(size=size)
+    if character == "anime":
+        from .anime import AnimePresenter
+        big = {"scale": 0.95, "origin": (8, 18)} if style == "channel" else {}
+        return AnimePresenter(resolve("pipeline/assets/anime/cutout_raw.png"), size, **big)
+    from .avatar import Presenter
+    return Presenter(resolve(cfg.avatar_image), size)
+
+
+def pick_look(item, cfg):
+    """(character, style) for a story: its category's look from config, else one of the looks picked by the story id,
+    so a feed never shows one identical video over and over. Without avatar_looks everything is the original look."""
+    looks = cfg.avatar_looks
+    if not looks:
+        return ("photo", "studio")
+    by_category = {str(k).lower(): v for k, v in looks.items()}
+    look = by_category.get(str(item.get("category", "")).lower())
+    if look is None:
+        ordered = [looks[k] for k in sorted(looks)]
+        look = ordered[int(hashlib.sha1(str(item["id"]).encode()).hexdigest(), 16) % len(ordered)]
+    return (look["character"], look["style"])
+
+
 # ---------------------------------------------------------------- render loop
 
 def render_styled(style, audio_path, out_mp4, presenter, headline, image, credit="", channel="BOUGHT.", font_path=None,
                   seed="", moods=None, cut_ranges=None, cutaway_chance=0.6, category="", ticker=None, captions=None,
-                  laughs=(), subhead="") -> None:
+                  laughs=(), subhead="", script="") -> None:
     out_mp4 = Path(out_mp4)
     tmp = out_mp4.with_suffix(".mp4.tmp")
     size, s = presenter.size, presenter.s
@@ -489,6 +523,8 @@ def render_styled(style, audio_path, out_mp4, presenter, headline, image, credit
     n = len(env)
     mo = motion(env, seed)
     cut = plan_from_ranges(n, cut_ranges) if cut_ranges is not None else cutaway_plan(n, seed, cutaway_chance)
+    if not captions and script:                                   # no timings: spread the script over the speech
+        captions = [(0.35, max(1.0, n / FPS - 0.6), script)]
     if style == "channel":
         st = Channel(size, headline, image, credit, channel, font_path, category, ticker, subhead)
     elif style == "funky":

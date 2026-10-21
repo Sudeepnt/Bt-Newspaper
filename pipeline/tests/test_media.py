@@ -135,3 +135,63 @@ def test_podcast_builds_one_episode_with_chapters_and_is_idempotent(tmp_path):
     res3 = build_podcast(cfg, feed, out, cache)
     assert res3["new"] == 1 and res3["built"]
     assert story_script({"id": "x", "headline": "Hi", "summary": "S", "category": "AI"}, 2, "AI").startswith("Story 2. Next.")
+
+
+def test_looks_are_picked_per_category_and_rotate_for_unknown_ones():
+    from pipeline.styles import pick_look
+    looks = {"AI": {"character": "mascot", "style": "funky"}, "Technology": {"character": "photo", "style": "studio"}}
+    cfg = replace(load_config(), avatar_looks=looks)
+    assert pick_look({"id": "a", "category": "AI"}, cfg) == ("mascot", "funky")
+    assert pick_look({"id": "b", "category": "technology"}, cfg) == ("photo", "studio")           # case-insensitive
+    other = {pick_look({"id": str(i), "category": "World"}, cfg) for i in range(40)}
+    assert other == {("mascot", "funky"), ("photo", "studio")}                                    # unknown: rotates over the looks
+    assert pick_look({"id": "a", "category": "World"}, cfg) == pick_look({"id": "a", "category": "World"}, cfg)
+    assert pick_look({"id": "a", "category": "AI"}, replace(load_config(), avatar_looks={})) == ("photo", "studio")   # no looks: original
+    with pytest.raises(ConfigError):
+        import yaml as _y, tempfile
+        p = Path(tempfile.mkdtemp()) / "c.yaml"
+        p.write_text(_y.safe_dump({"avatar_looks": {"AI": {"character": "robot", "style": "funky"}}}))
+        load_config(p)
+
+
+@needs_ffmpeg
+def test_mixed_looks_render_with_different_hosts_and_sets(tmp_path):
+    pytest.importorskip("PIL"); pytest.importorskip("numpy")
+    looks = {"AI": {"character": "mascot", "style": "funky"}, "Technology": {"character": "photo", "style": "studio"},
+             "Tech business": {"character": "anime", "style": "channel"}}
+    cfg = cfg_with([sys.executable, "-c", STUB, "{wav}"], avatar_enabled=True, avatar_size=(320, 180), avatar_looks=looks,
+                   avatar_cutaway_chance=0, media_time_budget_seconds=600)
+    res, feed, out = go(tmp_path, cfg)
+    media = out.parent / "media"
+    cats = {i["category"] for i in feed["prime"]}
+    assert {"AI", "Technology", "Tech business"} <= cats
+    assert all(i.get("video_url") and (media / Path(i["video_url"]).name).exists() for i in feed["prime"])
+    sizes = {(media / Path(i["video_url"]).name).stat().st_size for i in feed["prime"]}
+    assert len(sizes) > 5                                                                          # not 25 copies of one look
+
+
+def test_badges_rules_priority_and_engagement():
+    from pipeline.badges import assign_badges
+    cfg = replace(load_config(), badges_enabled=True, badges_exclusive_sources=("The Wire",), badges_min_events=30)
+
+    def item(i, **kw):
+        return {"id": i, "headline": "A thing happens", "category": "Technology", "source": "Other",
+                "published_at": "2026-10-13T00:00:00Z", **kw}
+    feed = {"generated_at": "2026-10-13T04:00:00Z",
+            "prime": [item("a", category="AI", source="The Wire", published_at="2026-10-13T03:00:00Z"),   # exclusive + ai + new
+                      item("b", headline="OpenAI ships a new model"), item("c"), item("d")],
+            "cards": [item("e")], "glance": [item("f"), item("g")]}
+    engagement = {"c": {"views": 500, "reads": 40}, "d": {"views": 300}, "f": {"glances": 90}, "g": {"glances": 90, "reads": 10},
+                  "e": {"reads": 41}}
+    counts = assign_badges(cfg, feed, engagement)
+    ids = lambda x: [b["id"] for b in x["badges"]]
+    assert ids(feed["prime"][0]) == ["exclusive", "ai"]               # three earned, strongest two kept
+    assert ids(feed["prime"][1]) == ["ai"]                            # headline about AI, not the category
+    assert ids(feed["prime"][2]) == ["most-viewed"]                   # 500 beats 300
+    assert ids(feed["cards"][0]) == ["most-read"]                     # 41 reads beats 40
+    assert ids(feed["glance"][0]) == [] and ids(feed["glance"][1]) == []   # a tie in glances wins nothing
+    assert feed["prime"][3]["badges"] == []
+    assert counts["ai"] == 2
+    quiet = {"generated_at": "2026-10-13T04:00:00Z", "prime": [item("c")], "cards": [], "glance": []}
+    assign_badges(cfg, quiet, {"c": {"views": 5}})
+    assert quiet["prime"][0]["badges"] == []                          # under badges_min_events: a quiet day shows none

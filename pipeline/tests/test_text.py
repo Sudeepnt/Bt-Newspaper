@@ -22,3 +22,17 @@ def test_title_tokens_ignore_case_punctuation_stopwords_plurals():
 def test_jaccard():
     a, b = title_tokens("chip stocks climb"), title_tokens("chip stocks fall")
     assert jaccard(a, a) == 1.0 and jaccard(a, b) == 0.5 and jaccard(a, frozenset()) == 0.0
+
+
+def test_spoken_summary_never_repeats_the_headline():
+    from pipeline.text import spoken_summary
+    h = "Chipmakers race to ship 2nm processors in volume"
+    blurb = f"{h} is drawing attention across the industry. Analysts say the next few weeks will show whether the shift holds."
+    assert spoken_summary(h, blurb) == "Analysts say the next few weeks will show whether the shift holds."
+    assert spoken_summary(h, h + ". The race is on.") == "The race is on."                      # headline as its own sentence
+    assert spoken_summary(h, h + ": The first chips ship in March. Prices stay high.") == "The first chips ship in March. Prices stay high."
+    real = "Samsung and TSMC both say volume production starts this year. Analysts expect shortages."
+    assert spoken_summary(h, real) == real                                                       # a real summary is untouched
+    assert spoken_summary(h, "") == "" and spoken_summary("", "Something.") == "Something."
+    assert "drawing attention" not in spoken_summary("AI agents move from prompts to tasks",
+                                                     "AI agents move from prompts to tasks is drawing attention across the industry.")

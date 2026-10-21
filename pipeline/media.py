@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 
 from . import db
+from .text import spoken_summary
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +35,8 @@ def make_script(item: dict, max_chars: int = 600) -> str:
     def sentence(text):
         text = re.sub(r"\s+", " ", text or "").strip()
         return text if not text or text[-1] in ".!?" else text + "."
-    parts = [sentence(item["category"]), sentence(item["headline"]), sentence(item["summary"]),
+    parts = [sentence(item["category"]), sentence(item["headline"]),
+             sentence(spoken_summary(item["headline"], item["summary"])),
              f"Source: {item['source']}."]
     script = " ".join(p for p in parts if p)
     return script if len(script) <= max_chars else script[: max_chars - 1].rsplit(" ", 1)[0] + "."
@@ -74,7 +76,8 @@ def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize, 
     conn.executescript(ASSETS_SCHEMA)
     out_dir = Path(out_dir)
     stats = {"made": 0, "skipped": 0, "failed": 0, "deferred": 0}
-    video_cache = []  # presenter frames, built once per run
+    video_cache = {}  # presenters, built once per run (one per look)
+    ticker = [i["headline"] for i in feed["prime"]]
     deadline = time.monotonic() + cfg.media_time_budget_seconds
     for item in sorted(feed["prime"], key=lambda i: i["published_at"], reverse=True):  # newest first
         script = item["script"]
@@ -83,7 +86,7 @@ def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize, 
         if row and row["status"] == "ok" and row["script_hash"] == script_hash(script) and path.exists():
             stats["skipped"] += 1
             if cfg.avatar_enabled:
-                _video(conn, cfg, item, path, out_dir, now_iso, video_cache, fetch_images)
+                _video(conn, cfg, item, path, out_dir, now_iso, video_cache, fetch_images, ticker)
             continue
         same_script = row and row["script_hash"] == script_hash(script)
         if row and row["status"] == "failed" and same_script and row["attempts"] >= cfg.media_max_attempts:
@@ -108,7 +111,7 @@ def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize, 
                 (item["id"], "audio", path.name, script_hash(script), duration, status, attempts, err, now_iso))
         stats["made" if status == "ok" else "failed"] += 1
         if status == "ok" and cfg.avatar_enabled:
-            _video(conn, cfg, item, path, out_dir, now_iso, video_cache, fetch_images)
+            _video(conn, cfg, item, path, out_dir, now_iso, video_cache, fetch_images, ticker)
     return stats
 
 
@@ -120,12 +123,27 @@ def _poster(avatar, path) -> None:
         log.warning("poster failed for %s: %s", path.name, e)
 
 
-def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True) -> None:
-    """Presenter video for one story; same skip/retry rules as audio, keyed on the script hash."""
+def video_hash(item, cfg) -> str:
+    """Changes when the script or the story's look changes, so a new look re-renders its video."""
+    from .styles import pick_look
+    return script_hash(item["script"] + "|" + "|".join(pick_look(item, cfg)))
+
+
+def _subhead(item, limit=96) -> str:
+    """The last sentence of the summary, for the channel set's sub-line."""
+    sentences = [s.strip() for s in item.get("summary", "").replace("? ", ". ").split(". ") if s.strip()]
+    text = (sentences[-1] if sentences else "").rstrip(".") + "."
+    return text if len(text) <= limit else text[:limit - 3].rsplit(" ", 1)[0] + "..."
+
+
+def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True, ticker=()) -> None:
+    """Presenter video for one story; same skip/retry rules as audio, keyed on the script hash and look."""
     from . import avatar  # Pillow/numpy only needed when avatar_enabled
+    from .styles import build_presenter, pick_look, render_styled
     root = Path(__file__).resolve().parent.parent
     resolve = lambda p: Path(p) if Path(p).is_absolute() else root / p
-    h = script_hash(item["script"])
+    h = video_hash(item, cfg)
+    look = pick_look(item, cfg)
     path = out_dir / f"{item['id']}.mp4"
     row = conn.execute("SELECT * FROM assets WHERE article_id=? AND kind='video'", (item["id"],)).fetchone()
     same = row and row["script_hash"] == h
@@ -135,12 +153,18 @@ def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True) -
     if same and row["status"] == "failed" and row["attempts"] >= cfg.media_max_attempts:
         return
     try:
-        if not cache:
-            cache.append(avatar.Presenter(resolve(cfg.avatar_image), tuple(cfg.avatar_size)))
+        if look not in cache:
+            cache[look] = build_presenter(look[0], look[1], cfg, resolve)
         shot = _monitor_image(item, cfg, out_dir, resolve, fetch_images)
-        avatar.render_video(audio, path, cache[0], item["headline"], shot, item.get("image_credit") or "",
-                            cfg.avatar_channel, resolve(cfg.avatar_font), seed=item["id"],
-                            cutaway_chance=cfg.avatar_cutaway_chance)
+        credit = item.get("image_credit") or ""
+        if look[1] == "studio":
+            avatar.render_video(audio, path, cache[look], item["headline"], shot, credit, cfg.avatar_channel,
+                                resolve(cfg.avatar_font), seed=item["id"], cutaway_chance=cfg.avatar_cutaway_chance)
+        else:
+            render_styled(look[1], audio, path, cache[look], item["headline"], shot, credit, cfg.avatar_channel,
+                          resolve(cfg.avatar_font), seed=item["id"], cutaway_chance=cfg.avatar_cutaway_chance,
+                          category=item.get("category", ""), ticker=[t for t in ticker if t != item["headline"]][:8],
+                          script=item["script"], subhead=_subhead(item))
         _poster(avatar, path)
         status, err = "ok", None
     except Exception as e:
@@ -167,7 +191,7 @@ def attach_media(conn, cfg, feed: dict) -> None:
         item["duration_s"] = r["duration_s"] if ok else None
         v = conn.execute("SELECT * FROM assets WHERE article_id=? AND kind='video' AND status='ok'",
                          (item["id"],)).fetchone()
-        vok = v and v["script_hash"] == script_hash(item["script"])
+        vok = v and v["script_hash"] == video_hash(item, cfg)
         if cfg.avatar_enabled:
             item["video_url"] = f"{base}/{v['path']}" if vok else None
             item["poster_url"] = f"{base}/{Path(v['path']).with_suffix('.jpg').name}" if vok else None

@@ -70,6 +70,19 @@ def cmd_clip(args) -> int:
     return 0
 
 
+def cmd_badges(args) -> int:
+    """Recompute the badges on the current feed.json from the latest engagement counts (cheap: no ingest, no media)."""
+    import json
+    from .badges import assign_badges
+    cfg = load_config(args.config)
+    feed_path = paths(args.dry_run)[1]
+    feed = json.loads(feed_path.read_text())
+    counts = assign_badges(cfg, feed)
+    feed_path.write_text(json.dumps(feed, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print("badges: " + (", ".join(f"{k} {v}" for k, v in sorted(counts.items())) or "none"))
+    return 0
+
+
 def cmd_podcast(args) -> int:
     """Build (or finish building) the podcast episode for the current feed.json, without a new ingest."""
     import json
@@ -94,6 +107,7 @@ def main(argv=None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
     _add_common(sub.add_parser("run", help="one full cycle"))
     _add_common(sub.add_parser("show", help="print the current selection"))
+    _add_common(sub.add_parser("badges", help="refresh the story badges from the latest engagement counts"))
     _add_common(sub.add_parser("podcast", help="narrate every story into one episode (uses the existing feed.json)"))
     pc = sub.add_parser("clip", help="render a produced clip from a spec file (see pipeline/clips/)")
     pc.add_argument("spec")
@@ -102,7 +116,7 @@ def main(argv=None) -> int:
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING,
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     try:
-        return {"run": cmd_run, "show": cmd_show, "clip": cmd_clip, "podcast": cmd_podcast}[args.cmd](args)
+        return {"run": cmd_run, "show": cmd_show, "clip": cmd_clip, "podcast": cmd_podcast, "badges": cmd_badges}[args.cmd](args)
     except ConfigError as e:
         print(f"config error: {e}", file=sys.stderr)
         return 2
