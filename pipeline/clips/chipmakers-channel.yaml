@@ -1,0 +1,17 @@
+# Design: TV news channel (LIVE tag, red tag + white headline bar, scrolling ticker of the other top stories).
+# Facts used: only what the story gives us (chipmakers, 2nm processors in volume, analysts say the next few weeks will tell).
+name: chipmakers-channel
+character: anime
+style: channel
+category: "TOP STORY"
+subhead: "Analysts say the next few weeks will show whether the shift holds."
+attach_to: 293873247e6ba2c1
+headline: "Chipmakers race to ship 2nm processors in volume"
+image: public/assets/swipe-data-center.jpg
+credit: "Example Photo Desk"
+speed: 1.0
+segments:
+  - {mood: neutral, text: "Good evening. Our top story tonight: chipmakers are racing to ship two nanometer processors in volume.", pause: 0.45}
+  - {mood: serious, text: "The whole industry is watching to see who delivers at scale, and who gets left behind.", pause: 0.45, cutaway: true}
+  - {mood: neutral, text: "Analysts say the next few weeks will show whether the shift holds.", pause: 0.45}
+  - {mood: neutral, text: "We will bring you more as it develops. Stay with us.", pause: 0.2}

@@ -52,12 +52,12 @@ def _run(cmd, **kw):
                            f"{(e.stderr or b'').decode(errors='replace').strip()[-200:]}") from None
 
 
-def synthesize(script: str, out_mp3: Path, cfg) -> float:
+def synthesize(script: str, out_mp3: Path, cfg, speed: float = 1.0) -> float:
     """TTS -> wav -> mp3 via a temp file, then atomic rename. Returns duration in seconds."""
     out_mp3.parent.mkdir(parents=True, exist_ok=True)
     wav, tmp = out_mp3.with_suffix(".wav.tmp"), out_mp3.with_suffix(".mp3.tmp")
     try:
-        cmd = [a.replace("{wav}", str(wav)) for a in cfg.tts_command]
+        cmd = [a.replace("{wav}", str(wav)).replace("{speed}", str(speed)) for a in cfg.tts_command]
         _run(cmd, input=script.encode(), timeout=cfg.tts_timeout_seconds)
         _run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav), "-f", "mp3", "-b:a", "64k", str(tmp)])
         out = _run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -130,7 +130,8 @@ def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True) -
             cache.append(avatar.Presenter(resolve(cfg.avatar_image), tuple(cfg.avatar_size)))
         shot = _monitor_image(item, cfg, out_dir, resolve, fetch_images)
         avatar.render_video(audio, path, cache[0], item["headline"], shot, item.get("image_credit") or "",
-                            cfg.avatar_channel, resolve(cfg.avatar_font), seed=item["id"])
+                            cfg.avatar_channel, resolve(cfg.avatar_font), seed=item["id"],
+                            cutaway_chance=cfg.avatar_cutaway_chance)
         status, err = "ok", None
     except Exception as e:
         status, err = "failed", f"{type(e).__name__}: {e}"[:300]
@@ -178,5 +179,17 @@ def _monitor_image(item, cfg, out_dir, resolve, fetch):
         except Exception as e:
             cached.unlink(missing_ok=True)
             log.info("monitor image for %s unavailable (%s); using fallback", item["id"], type(e).__name__)
-    fallbacks = cfg.avatar_fallback_images
-    return Image.open(resolve(fallbacks[int(item["id"], 16) % len(fallbacks)])).convert("RGB")
+    return Image.open(resolve(_pick_fallback(item, cfg))).convert("RGB")
+
+
+def _pick_fallback(item, cfg) -> str:
+    """Best-matching stand-in picture: most keyword hits in headline/summary/category, else a stable pick."""
+    text = " ".join(str(item.get(k) or "") for k in ("headline", "summary", "category")).lower()
+    words = set(re.findall(r"[a-z0-9]+", text))
+    best, score = None, 0
+    for image, keywords in cfg.avatar_fallback_keywords.items():
+        hits = sum(1 for k in keywords if k in words or (len(k) > 4 and k in text))
+        if hits > score:
+            best, score = image, hits
+    pool = cfg.avatar_fallback_images
+    return best or pool[int(item["id"], 16) % len(pool)]

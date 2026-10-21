@@ -1,0 +1,19 @@
+# Design: funky / sticker look (moving gradient, halftone, tilted photo card, starburst, pop-in captions).
+# Facts used: only what the story gives us (quantum error correction, a key lab milestone, analysts say the next few weeks will tell).
+name: quantum-funky
+character: anime
+style: funky
+category: "WOW"
+attach_to: 1a0ad868f6c9c489
+headline: "Quantum error correction passes a key lab milestone"
+image: public/assets/podcast-earth.jpg
+credit: "Example Photo Desk"
+speed: 1.08
+segments:
+  - {mood: happy,   text: "Okay okay okay, big day for quantum!", pause: 0.3}
+  - {mood: happy,   text: "Error correction just passed a key lab milestone.", pause: 0.4, cutaway: true}
+  - {mood: neutral, text: "Fewer mistakes, from machines that are famous for getting upset.", pause: 0.3}
+  - {mood: happy,   text: "These things are so delicate, they glitch if you look at them funny.", pause: 0.1}
+  - {laugh: true, sound: pipeline/assets/laughs/laugh-b.wav}
+  - {mood: serious, text: "It's a lab result, not a product though. Analysts say the next few weeks will show if it holds.", pause: 0.35}
+  - {mood: happy,   text: "We'll keep watching. Stay curious!", pause: 0.2}

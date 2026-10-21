@@ -1,0 +1,18 @@
+# `cutaway: true` on a line = the picture goes full screen for that line and she steps out; the voice continues.
+# A produced ~30 s clip: funky mascot host, conversational script, laugh beat. Facts used: only what the story gives us
+# (satellite broadband, remote schools, a pilot, analysts say the next few weeks will show if it holds).
+name: satellite-schools-mascot
+character: mascot
+attach_to: ec0d5009476c4c94          # prime story #2 in the dry-run feed
+headline: "Satellite broadband reaches remote schools in pilot"
+image: public/assets/podcast-earth.jpg
+credit: "Example Photo Desk"
+speed: 1.05
+segments:
+  - {mood: happy,   text: "Okay, you're going to like this one.", pause: 0.35}
+  - {mood: neutral, text: "A pilot program is beaming satellite broadband into remote schools, places where getting online has always been the hard part.", pause: 0.4}
+  - {mood: happy,   text: "A classroom that was cut off is suddenly connected, with no miles of cable to lay.", pause: 0.45, cutaway: true}
+  - {mood: happy,   text: "Which means the next generation might never know the pain of a buffering wheel.", pause: 0.1}
+  - {laugh: true, sound: pipeline/assets/laughs/laugh-b.wav}     # recorded laugh (Chatterbox Turbo, generated once)
+  - {mood: serious, text: "Now, it's still just a pilot. Analysts say the next few weeks will show whether it really holds up.", pause: 0.4}
+  - {mood: happy,   text: "So we'll keep watching, and tell you the moment we know.", pause: 0.2}

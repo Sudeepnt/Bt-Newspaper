@@ -52,3 +52,10 @@ Queue only the 25 prime stories, newest first, with a per-run time budget so a 3
 - Is a stylised/illustrated presenter acceptable, or must it look like a real person?
 - Where are media files hosted (same VPS, object storage, CDN)?
 - Is a GPU (rented by the hour) acceptable for batch pre-rendering?
+
+## 6. Produced clips and designs (hand-written scripts)
+`python -m pipeline clip SPEC.yaml --dry-run` builds a clip from a YAML script (see `pipeline/clips/`): per-line moods,
+`cutaway: true`, a `laugh` beat or a recorded `sound:`. `character:` is `photo`, `anime` or `mascot`; `style:` is
+`studio` (default), `channel` (TV news set: LIVE tag, headline + sub-line, UP NEXT, ticker) or `funky` (sticker look).
+Kokoro setup for the voice: install `kokoro-onnx` + `soundfile` in a Python >= 3.10 venv, download `kokoro.onnx` and
+`voices.bin`, and point `tts_command` at `tts_kokoro.py` (not yet in the README).

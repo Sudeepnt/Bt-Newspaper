@@ -46,3 +46,6 @@ Not verified: licenses of newer versions pulled by a fresh `pip install` on the 
 | libx264 (inside ffmpeg) | GPL-2.0+ | subprocess; needed for H.264 MP4 output |
 | Kokoro-82M + kokoro-onnx (voice, optional) | Apache-2.0 / MIT per upstream (package metadata was blank; re-check) | `tts_kokoro.py`, needs Python >= 3.10 |
 | rembg + u2net_human_seg (one-off cutout) | MIT (rembg); model licence not verified | only used to make `assets/presenter_cutout.png` |
+| rembg + isnet-anime (one-off cutout of the anime anchor) | MIT (rembg); model licence not verified | only used to make `assets/anime/cutout_raw.png` from the user's own character sheet |
+| Chatterbox Turbo (laughs, one-off, Mac only) | MIT; output carries an inaudible Perth watermark | the two WAVs in `assets/laughs/` are shipped; the model is not needed on the server |
+| Mascot host (`mascot.py`) | original, drawn in code | no third-party artwork |

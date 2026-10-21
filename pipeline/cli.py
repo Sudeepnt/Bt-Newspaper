@@ -59,17 +59,29 @@ def cmd_show(args) -> int:
     return 0
 
 
+def cmd_clip(args) -> int:
+    from .clip import make_clip
+    cfg = load_config(args.config)
+    res = make_clip(args.spec, cfg, dry_run=args.dry_run)
+    print(f"clip: {res['mp4']} ({res['duration_s']}s)" + (f" -> attached to feed item {res['attached_to']}" if res["attached_to"] else ""))
+    print(f"laughs at {res['laughs']} | cutaways at {res['cutaways']}")
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="python -m pipeline", description=__doc__)
     parser.add_argument("-v", "--verbose", action="store_true")
     sub = parser.add_subparsers(dest="cmd", required=True)
     _add_common(sub.add_parser("run", help="one full cycle"))
     _add_common(sub.add_parser("show", help="print the current selection"))
+    pc = sub.add_parser("clip", help="render a produced clip from a spec file (see pipeline/clips/)")
+    pc.add_argument("spec")
+    _add_common(pc)
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING,
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     try:
-        return {"run": cmd_run, "show": cmd_show}[args.cmd](args)
+        return {"run": cmd_run, "show": cmd_show, "clip": cmd_clip}[args.cmd](args)
     except ConfigError as e:
         print(f"config error: {e}", file=sys.stderr)
         return 2

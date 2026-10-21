@@ -54,9 +54,23 @@ class Config:
     # Phase 2b: presenter video (needs media_enabled). Paths are relative to the project root.
     avatar_enabled: bool = False
     avatar_image: str = "pipeline/assets/presenter_cutout.png"   # transparent PNG, 1280x720 design space
-    avatar_size: tuple = (960, 540)            # 16:9 news frame
+    avatar_size: tuple = (1280, 720)           # 16:9 news frame, the native design size (no downscaling)
     avatar_font: str = "public/assets/font-0.ttf"
     avatar_channel: str = "BOUGHT."
+    avatar_cutaway_chance: float = 0.6         # share of stories where the visual goes full screen and she steps out
+    avatar_fallback_keywords: dict = field(default_factory=lambda: {   # stand-in picture -> words that pick it
+        "public/assets/swipe-data-center.jpg": ["chip", "chips", "chipmakers", "processors", "data", "cloud", "server",
+                                                "servers", "capacity", "computing", "quantum", "semiconductor", "network", "operating",
+                                                "system", "systems", "linux"],
+        "public/assets/swipe-robotics.jpg": ["ai", "robot", "robots", "agent", "agents", "model", "models", "machine",
+                                             "automation", "autonomous", "humanoid", "software"],
+        "public/assets/swipe-founders.jpg": ["startup", "startups", "founder", "founders", "funding", "raises", "investors",
+                                             "venture", "company", "launches", "product"],
+        "public/assets/swipe-battery.jpg": ["battery", "batteries", "charging", "energy", "electric", "ev", "power",
+                                            "solar", "grid", "bus", "buses"],
+        "public/assets/swipe-rocket.jpg": ["satellite", "satellites", "space", "rocket", "orbit", "launch", "broadband",
+                                           "geopolitics", "defense", "security", "cybersecurity"],
+    })
     avatar_fallback_images: tuple = ("public/assets/swipe-data-center.jpg", "public/assets/swipe-robotics.jpg",
                                      "public/assets/swipe-founders.jpg", "public/assets/swipe-battery.jpg",
                                      "public/assets/swipe-rocket.jpg")

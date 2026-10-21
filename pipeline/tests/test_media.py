@@ -74,3 +74,36 @@ def test_avatar_video_made_and_in_feed(tmp_path):
     assert res["media"]["failed"] == 0
     assert all(i["video_url"].endswith(".mp4") for i in feed["prime"])
     assert len(list((out.parent / "media").glob("*.mp4"))) == 25
+
+
+@needs_ffmpeg
+def test_anime_clip_with_laugh_and_cutaway(tmp_path):
+    pytest.importorskip("PIL")
+    from pipeline.clip import make_clip
+    cfg = replace(cfg_with([sys.executable, "-c", STUB, "{wav}"]), avatar_size=(320, 180))
+    spec = tmp_path / "s.yaml"
+    spec.write_text(yaml.safe_dump({
+        "name": "t", "character": "anime", "headline": "Hello there", "image": "public/assets/podcast-earth.jpg",
+        "segments": [{"text": "Hi.", "mood": "happy"}, {"laugh": 0.5},
+                     {"text": "Bye.", "cutaway": True}]}))
+    feed = tmp_path / "feed.json"
+    feed.write_text(json.dumps({"prime": [{"id": "abc"}]}))
+    spec.write_text(spec.read_text() + "attach_to: abc\n")
+    res = make_clip(spec, cfg, feed_path=feed)
+    assert Path(res["mp4"]).exists() and 3 < res["duration_s"] < 8   # stub speech is 1 s per segment
+    item = json.loads(feed.read_text())["prime"][0]
+    assert item["video_url"].endswith("t.mp4") and item["duration_s"] == res["duration_s"]
+
+
+def test_mascot_presenter_renders_all_moods():
+    import numpy as np
+    from pipeline.avatar import motion
+    from pipeline.mascot import MascotPresenter
+    p = MascotPresenter(size=(640, 360))
+    m = motion(np.zeros(30), "t")
+    sizes = set()
+    for mood, blink in (("neutral", 0), ("happy", 1), ("laugh", 0), ("serious", 2)):
+        im = p.frame(0.3, blink, m, 3, mood)
+        assert im.mode == "RGBA" and im.getchannel("A").getbbox()
+        sizes.add(im.size)
+    assert len(sizes) == 1

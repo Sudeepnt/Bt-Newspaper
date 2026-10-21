@@ -499,5 +499,8 @@ html.is-reading, html.is-reading body { overflow: hidden; }
 .story-source { margin: 10px 0 0; font: 400 .8rem/1.4 'DM Sans', Arial, sans-serif; color: #5c574d; }
 .story-source a { color: inherit; }
 
-.video-poster.has-video { aspect-ratio: 16 / 9; }
+.video-poster.has-video { aspect-ratio: 16 / 9; background: #000; }
+/* Like YouTube: fit the whole frame (never crop the headline bar); spare space becomes black bars */
+.video-poster.has-video .hero-image { object-fit: contain; object-position: center; background: #000; }
+.video-poster.has-video video:fullscreen, .video-poster.has-video video:-webkit-full-screen { object-fit: contain; width: 100%; height: 100%; background: #000; }
 .video-poster.has-video::after { display: none; }

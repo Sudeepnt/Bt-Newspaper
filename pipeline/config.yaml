@@ -31,5 +31,6 @@ script_max_chars: 600
 # Phase 2b: presenter video from the audio (2D mouth animation; needs media_enabled, Pillow, numpy, ffmpeg+x264).
 avatar_enabled: false
 avatar_image: "pipeline/assets/presenter_cutout.png"
-avatar_size: [960, 540]   # 16:9
+avatar_size: [1280, 720]   # 16:9 (720p)
 avatar_channel: "BOUGHT."
+avatar_cutaway_chance: 0.6   # 0 = never go full screen

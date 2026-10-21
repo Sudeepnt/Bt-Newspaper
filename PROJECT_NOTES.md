@@ -96,3 +96,9 @@ tests `pytest pipeline`. Phase 2 (TTS/avatar) is only planned in `pipeline/PHASE
 Run commands from the project root.
 
 Phase 2a (2026-10-21): prime items get `script`, `audio_url`, `duration_s` via external TTS (Piper tested); see `pipeline/PHASE2.md`. Avatar video (2b) not started.
+
+## Planned: engagement stats and badges (requested, not built)
+Study how long readers actually spend on each story and show LinkedIn-style signals ("Most viewed", impression counts).
+- Client measures per story: impression (card >=50% visible for >=1 s), dwell seconds (visible time, paused when the tab is hidden), video watch seconds and completion.
+- Needs a collector (small endpoint + SQLite) and a nightly pipeline stage that turns counts into badges in `feed.json` (e.g. top 10% by dwell -> "Most viewed"). Hosting the collector needs the user's approval first.
+- Privacy: anonymous random id, no personal data; counts are only shown once a story has enough views.
