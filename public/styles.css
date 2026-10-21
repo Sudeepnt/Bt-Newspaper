@@ -583,3 +583,20 @@ html.is-reading, html.is-reading body { overflow: hidden; }
   .story-copy h2 { font-size: 1.55rem; }
   .swipe-copy h2 { font-size: 3.4rem; }
 }
+
+/* Prime videos have no media controller: the mic button, the left/right thirds (5 s jumps) and a thin progress line */
+.video-poster.has-video { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.video-poster.has-video video { pointer-events: none; }
+.video-poster.has-video .play-news { transition: opacity .2s; }
+.video-poster.has-video.is-playing .play-news { opacity: 0; pointer-events: none; }
+.video-poster.has-video .microphone-circle { position: relative; }
+.microphone-circle .countdown-ring { position: absolute; inset: -7px; width: calc(100% + 14px); height: calc(100% + 14px); transform: rotate(-90deg); fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 201; stroke-dashoffset: 201; opacity: 0; pointer-events: none; }
+.is-counting .microphone-circle .countdown-ring { opacity: 1; animation: countdown-fill 3s linear forwards; }
+@keyframes countdown-fill { to { stroke-dashoffset: 0; } }
+.video-progress { position: absolute; z-index: 2; right: 0; bottom: 0; left: 0; height: 3px; background: #ffffff40; pointer-events: none; }
+.video-progress i { display: block; width: 0; height: 100%; background: #fff; transition: width .3s linear; }
+.seek-flash { position: absolute; z-index: 3; top: 50%; padding: 6px 12px; border-radius: 999px; background: #000a; color: #fff; font: 600 .875rem/1 'DM Sans', Arial, sans-serif; opacity: 0; transform: translateY(-50%); pointer-events: none; }
+.seek-flash[data-side='back'] { left: 12%; }
+.seek-flash[data-side='fwd'] { right: 12%; }
+.seek-flash.is-on { animation: seek-flash .6s ease-out; }
+@keyframes seek-flash { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }

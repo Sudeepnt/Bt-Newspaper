@@ -396,10 +396,14 @@ function renderStory(story, number, saveKey = number) {
     <article class="lead-story" id="story-${number}" aria-labelledby="story-title-${number}" data-story-number="${number}" data-save-key="${saveKey}">
       <div class="video-poster${story.video ? ' has-video' : ''}">
         ${story.video
-          ? `<video class="hero-image" src="${escapeStoryText(story.video)}" controls playsinline preload="metadata" aria-label="AI journalist presenting: ${escapeStoryText(story.title)}"></video>`
+          ? `<video class="hero-image" src="${escapeStoryText(story.video)}#t=0.1" playsinline preload="metadata" disablepictureinpicture disableremoteplayback aria-label="AI journalist presenting: ${escapeStoryText(story.title)}"></video>`
           : `<img class="hero-image" src="${story.image}" alt="${escapeStoryText(story.imageAlt)}" style="object-position: ${escapeStoryText(story.imagePosition)}" loading="${loading}">`}
         <span class="video-story-number" aria-label="Story ${number} of 50">${number} / 50</span>
-        ${story.video ? '' : `<button class="play-news" type="button" aria-label="Play AI journalist news preview">
+        ${story.video ? `<button class="play-news" type="button" aria-label="Play the news: ${escapeStoryText(story.title)}">
+          <span class="microphone-circle">${microphoneIcon}<svg class="countdown-ring" viewBox="0 0 70 70" aria-hidden="true" focusable="false"><circle cx="35" cy="35" r="32" /></svg></span>
+        </button>
+        <span class="seek-flash" aria-hidden="true"></span>
+        <span class="video-progress" aria-hidden="true"><i></i></span>` : `<button class="play-news" type="button" aria-label="Play AI journalist news preview">
           <span class="microphone-circle">${microphoneIcon}</span>
         </button>
         <div class="journalist-window">
@@ -775,3 +779,94 @@ storiesRoot.addEventListener('click', (event) => {
     shareStory(article);
   }
 });
+
+// ---- Prime videos: no media controller. Mic button in the middle plays/pauses, the left and right thirds jump 5 s,
+// and when a video ends the mic button counts down 3 s, then the page scrolls to the next news video and plays it.
+// Tapping the button during the countdown stops the auto-advance.
+(() => {
+  const SEEK = 5, COUNTDOWN_MS = 3000;
+  const posters = () => [...storiesRoot.querySelectorAll('.video-poster.has-video')];
+  let countdown = null;                                   // { poster, timer }
+
+  function cancelCountdown() {
+    if (!countdown) return;
+    clearTimeout(countdown.timer);
+    countdown.poster.classList.remove('is-counting');
+    countdown = null;
+  }
+
+  function flash(poster, text, side) {
+    const el = poster.querySelector('.seek-flash');
+    el.textContent = text;
+    el.dataset.side = side;
+    el.classList.remove('is-on');
+    void el.offsetWidth;                                  // restart the fade
+    el.classList.add('is-on');
+  }
+
+  function playPoster(poster) {
+    const video = poster.querySelector('video');
+    posters().forEach((other) => { if (other !== poster) other.querySelector('video').pause(); });
+    cancelCountdown();
+    if (video.ended) video.currentTime = 0;
+    return video.play().catch(() => { /* blocked by the browser: the mic button stays for a tap */ });
+  }
+
+  storiesRoot.addEventListener('click', (event) => {
+    const poster = event.target.closest('.video-poster.has-video');
+    if (!poster) return;
+    const video = poster.querySelector('video');
+    if (poster.classList.contains('is-counting')) { cancelCountdown(); return; }   // tap the counting button = stay here
+    const box = poster.getBoundingClientRect();
+    const x = (event.clientX - box.left) / box.width;
+    const onButton = event.target.closest('.play-news');
+    if (!onButton && x < 0.3) {
+      video.currentTime = Math.max(0, video.currentTime - SEEK);
+      flash(poster, `−${SEEK}s`, 'back');
+    } else if (!onButton && x > 0.7) {
+      video.currentTime = Math.min(video.duration || Infinity, video.currentTime + SEEK);
+      flash(poster, `+${SEEK}s`, 'fwd');
+    } else if (video.paused || video.ended) {
+      playPoster(poster);
+    } else {
+      video.pause();
+    }
+  });
+
+  storiesRoot.addEventListener('keydown', (event) => {
+    const button = event.target.closest('.play-news');
+    const poster = button && button.closest('.video-poster.has-video');
+    if (!poster || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    const video = poster.querySelector('video');
+    const delta = event.key === 'ArrowLeft' ? -SEEK : SEEK;
+    video.currentTime = Math.max(0, Math.min(video.duration || Infinity, video.currentTime + delta));
+    flash(poster, `${delta < 0 ? '−' : '+'}${SEEK}s`, delta < 0 ? 'back' : 'fwd');
+    event.preventDefault();
+  });
+
+  // Media events do not bubble, so listen on each video.
+  posters().forEach((poster) => {
+    const video = poster.querySelector('video');
+    const bar = poster.querySelector('.video-progress i');
+    video.addEventListener('play', () => poster.classList.add('is-playing'));
+    video.addEventListener('pause', () => poster.classList.remove('is-playing'));
+    video.addEventListener('timeupdate', () => { bar.style.width = `${video.duration ? (video.currentTime / video.duration) * 100 : 0}%`; });
+    video.addEventListener('ended', () => {
+      poster.classList.remove('is-playing');
+      bar.style.width = '100%';
+      const all = posters();
+      const next = all[all.indexOf(poster) + 1];
+      if (!next) return;                                  // last video: stay on it with the mic button to replay
+      poster.classList.add('is-counting');
+      countdown = {
+        poster,
+        timer: setTimeout(() => {
+          poster.classList.remove('is-counting');
+          countdown = null;
+          next.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          playPoster(next);
+        }, COUNTDOWN_MS),
+      };
+    });
+  });
+})();
