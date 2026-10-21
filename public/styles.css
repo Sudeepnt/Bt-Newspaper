@@ -150,6 +150,9 @@ body {
 }
 
 .language-menu[hidden] { display: none; }
+/* Right-to-left: the picker sits at the left edge, so the menu opens rightwards instead of off-screen */
+:root[dir='rtl'] .language-menu { right: auto; left: 0; }
+:root[dir='rtl'] .language-option { text-align: right; }
 .menu-heading { padding: 17px 17px 10px; font: 700 19px/1 Newsreader, Georgia, serif; }
 .language-options { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .language-group { padding: 0 17px 8px; }
