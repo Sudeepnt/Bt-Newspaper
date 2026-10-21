@@ -112,6 +112,14 @@ def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize, 
     return stats
 
 
+def _poster(avatar, path) -> None:
+    """A missing still must never fail a finished video: the page falls back to loading the video's first frame."""
+    try:
+        avatar.extract_poster(path)
+    except Exception as e:
+        log.warning("poster failed for %s: %s", path.name, e)
+
+
 def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True) -> None:
     """Presenter video for one story; same skip/retry rules as audio, keyed on the script hash."""
     from . import avatar  # Pillow/numpy only needed when avatar_enabled
@@ -122,7 +130,7 @@ def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True) -
     row = conn.execute("SELECT * FROM assets WHERE article_id=? AND kind='video'", (item["id"],)).fetchone()
     same = row and row["script_hash"] == h
     if same and row["status"] == "ok" and path.exists():
-        avatar.extract_poster(path)                     # videos rendered before posters existed get theirs now
+        _poster(avatar, path)                           # videos rendered before posters existed get theirs now
         return
     if same and row["status"] == "failed" and row["attempts"] >= cfg.media_max_attempts:
         return
@@ -133,7 +141,7 @@ def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True) -
         avatar.render_video(audio, path, cache[0], item["headline"], shot, item.get("image_credit") or "",
                             cfg.avatar_channel, resolve(cfg.avatar_font), seed=item["id"],
                             cutaway_chance=cfg.avatar_cutaway_chance)
-        avatar.extract_poster(path)
+        _poster(avatar, path)
         status, err = "ok", None
     except Exception as e:
         status, err = "failed", f"{type(e).__name__}: {e}"[:300]

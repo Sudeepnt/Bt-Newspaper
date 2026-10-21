@@ -338,10 +338,14 @@ def extract_poster(mp4, jpg=None) -> Path:
     if jpg.exists():
         return jpg
     tmp = jpg.with_suffix(".jpg.tmp")
-    cmd = ["ffmpeg", "-y", "-loglevel", "error", "-ss", "1.6", "-i", str(mp4), "-frames:v", "1", "-q:v", "3",
-           "-f", "image2", str(tmp)]
-    subprocess.run(cmd, check=True, timeout=60)
-    os.replace(tmp, jpg)
+    for at in ("1.6", "0"):                                         # a very short video has no frame at 1.6 s: use the first
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", at, "-i", str(mp4), "-frames:v", "1", "-q:v", "3",
+                        "-f", "image2", str(tmp)], timeout=60)
+        if tmp.exists() and tmp.stat().st_size:
+            os.replace(tmp, jpg)
+            break
+    else:
+        raise RuntimeError(f"no frame could be read from {mp4}")
     return jpg
 
 
