@@ -374,19 +374,37 @@ function renderSpotlightPlacement(number) {
     </figure>`;
 }
 
+// When the content pipeline's feed is available (see index.html loader), its prime stories replace the samples.
+if (window.liveFeed && window.liveFeed.prime && window.liveFeed.prime.length) {
+  sampleStories.splice(0, sampleStories.length, ...window.liveFeed.prime.map((item) => ({
+    category: item.category,
+    title: item.headline,
+    deck: item.summary,
+    image: item.image_url,
+    imageAlt: '',
+    imagePosition: 'center 42%',
+    video: item.video_url || '',
+    audio: item.audio_url || '',
+    source: item.source,
+    link: item.link,
+  })));
+}
+
 function renderStory(story, number, saveKey = number) {
   const loading = number === 1 ? 'eager' : 'lazy';
   return `
     <article class="lead-story" id="story-${number}" aria-labelledby="story-title-${number}" data-story-number="${number}" data-save-key="${saveKey}">
       <div class="video-poster">
-        <img class="hero-image" src="${story.image}" alt="${escapeStoryText(story.imageAlt)}" style="object-position: ${escapeStoryText(story.imagePosition)}" loading="${loading}">
+        ${story.video
+          ? `<video class="hero-image" src="${escapeStoryText(story.video)}" controls playsinline preload="metadata" aria-label="AI journalist presenting: ${escapeStoryText(story.title)}"></video>`
+          : `<img class="hero-image" src="${story.image}" alt="${escapeStoryText(story.imageAlt)}" style="object-position: ${escapeStoryText(story.imagePosition)}" loading="${loading}">`}
         <span class="video-story-number" aria-label="Story ${number} of 50">${number} / 50</span>
-        <button class="play-news" type="button" aria-label="Play AI journalist news preview">
+        ${story.video ? '' : `<button class="play-news" type="button" aria-label="Play AI journalist news preview">
           <span class="microphone-circle">${microphoneIcon}</span>
         </button>
         <div class="journalist-window">
           <img src="assets/ai-presenter.jpg" alt="AI journalist presenting the story" loading="${loading}">
-        </div>
+        </div>`}
       </div>
 
       <div class="story-copy">
@@ -403,10 +421,12 @@ function renderStory(story, number, saveKey = number) {
         </div>
         <h2 id="story-title-${number}"><button class="story-title-button" type="button" data-open-story="${number}" aria-label="Read full story: ${escapeStoryText(story.title)}">${escapeStoryText(story.title)}</button></h2>
         <p class="story-deck">${escapeStoryText(story.deck)}</p>
-        <div class="story-facts">
+        ${story.link
+          ? `<p class="story-source">${escapeStoryText(story.source)} · <a href="${escapeStoryText(story.link)}" rel="noopener" target="_blank">Read at source</a></p>`
+          : `<div class="story-facts">
           <div><h3>What happened</h3><p>${escapeStoryText(story.happened)}</p></div>
           <div><h3>Why it matters</h3><p>${escapeStoryText(story.matters)}</p></div>
-        </div>
+        </div>`}
       </div>
     </article>`;
 }
@@ -502,7 +522,7 @@ function closeFullStory() {
 function openFullStory(number, opener) {
   const story = allStories[number - 1];
   if (!story) return;
-  const [opening, continuation] = articleDetails[number - 1] || [story.happened || story.deck, story.matters];
+  const [opening, continuation] = story.link ? [story.deck, ''] : articleDetails[number - 1] || [story.happened || story.deck, story.matters];
   articleOpener = opener;
   articleOverlayContent.innerHTML = `
     <div class="article-overlay-top">
@@ -518,9 +538,11 @@ function openFullStory(number, opener) {
       <div class="article-overlay-rule" aria-hidden="true"></div>
       <div class="article-overlay-body">
         <p>${escapeStoryText(opening)}</p>
-        <p>${escapeStoryText(continuation)}</p>
+        ${story.link
+          ? `<p><a href="${escapeStoryText(story.link)}" rel="noopener" target="_blank">Read the full story at ${escapeStoryText(story.source)}</a></p>`
+          : `<p>${escapeStoryText(continuation)}</p>
         <h3>Why it matters</h3>
-        <p>${escapeStoryText(story.matters)}</p>
+        <p>${escapeStoryText(story.matters)}</p>`}
       </div>
     </article>`;
   articleOverlay.hidden = false;

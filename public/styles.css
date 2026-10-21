@@ -495,3 +495,6 @@ html.is-reading, html.is-reading body { overflow: hidden; }
   .story-facts > div { padding-right: 0; }
   .story-facts > div + div { padding: 12px 0 0; border-top: 1px solid #d5d0c6; border-left: 0; }
 }
+
+.story-source { margin: 10px 0 0; font: 400 .8rem/1.4 'DM Sans', Arial, sans-serif; color: #5c574d; }
+.story-source a { color: inherit; }

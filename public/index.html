@@ -109,7 +109,21 @@
   <div class="action-feedback" id="action-feedback" role="status" aria-live="polite" hidden></div>
 
   <script src="language.js"></script>
-  <script src="stories.js"></script>
-  <script src="completion.js"></script>
+  <script>
+    // Use the pipeline feed when it exists (prime stories with presenter video); otherwise the built-in samples.
+    (async () => {
+      try {
+        const res = await fetch('live/feed.json', { cache: 'no-cache' });
+        if (res.ok) window.liveFeed = await res.json();
+      } catch (e) { /* no feed: keep the sample stories */ }
+      for (const src of ['stories.js', 'completion.js']) {
+        await new Promise((resolve) => {
+          const el = document.createElement('script');
+          el.src = src; el.onload = el.onerror = resolve;
+          document.body.append(el);
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
