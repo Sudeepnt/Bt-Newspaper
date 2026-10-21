@@ -94,3 +94,5 @@ Standalone Python service (own venv, `pipeline/README.md` has everything): RSS/n
 Settings in `pipeline/config.yaml` (slots 25/25/10 unconfirmed). `python -m pipeline run|show [--dry-run]`,
 tests `pytest pipeline`. Phase 2 (TTS/avatar) is only planned in `pipeline/PHASE2.md`. Licenses: `pipeline/LICENSES.md`.
 Run commands from the project root.
+
+Phase 2a (2026-10-21): prime items get `script`, `audio_url`, `duration_s` via external TTS (Piper tested); see `pipeline/PHASE2.md`. Avatar video (2b) not started.

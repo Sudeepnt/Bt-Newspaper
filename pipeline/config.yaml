@@ -17,3 +17,13 @@ dedupe_jaccard: 0.7
 og_fallback: true          # fetch og:image from the article page when the feed has none
 og_min_interval_seconds: 1.5      # per-host politeness delay
 og_max_per_source: 15      # article-page fetches per source per run
+
+# Phase 2a (audio). Off by default. Command gets the script on stdin and must write {wav}.
+# Example for Piper (MIT voices only; check each voice's licence):
+#   media_enabled: true
+#   tts_command: ["piper", "--model", "/opt/voices/en_US-lessac-medium.onnx", "--output_file", "{wav}"]
+media_enabled: false
+audio_base_url: "/media"
+media_time_budget_seconds: 900
+media_max_attempts: 3
+script_max_chars: 600

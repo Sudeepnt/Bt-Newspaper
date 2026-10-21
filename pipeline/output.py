@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 from .db import SLOTS
+from .media import make_script
 
 
 def build_feed(conn, cfg, generated_at: str) -> dict:
@@ -23,7 +24,7 @@ def build_feed(conn, cfg, generated_at: str) -> dict:
                 "published_at": r["published_at"],
             }
             if slot == "prime":
-                item["script"] = None  # Phase 2 fills this in
+                item["script"] = make_script(item, cfg.script_max_chars)
             items.append(item)
         feed[slot] = items
     return feed

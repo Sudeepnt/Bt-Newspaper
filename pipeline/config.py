@@ -43,6 +43,14 @@ class Config:
     og_fallback: bool = True
     og_min_interval_seconds: float = 1.5
     og_max_per_source: int = 15
+    # Phase 2a: audio for prime stories. tts_command reads the script on stdin and writes {wav}.
+    media_enabled: bool = False
+    tts_command: tuple = ()
+    tts_timeout_seconds: float = 120
+    audio_base_url: str = "/media"
+    media_time_budget_seconds: float = 900     # keeps a 30-min cron from overlapping itself
+    media_max_attempts: int = 3
+    script_max_chars: int = 600
 
 
 def load_config(path=None) -> Config:
@@ -51,6 +59,8 @@ def load_config(path=None) -> Config:
     unknown = set(raw) - set(Config.__dataclass_fields__)
     if unknown:
         raise ConfigError(f"unknown config keys: {sorted(unknown)}")
+    if isinstance(raw.get("tts_command"), list):
+        raw["tts_command"] = tuple(map(str, raw["tts_command"]))
     cfg = Config(**raw)
     if set(cfg.slots) != {"prime", "cards", "glance"} or any(
         not isinstance(n, int) or n < 0 for n in cfg.slots.values()
@@ -58,6 +68,8 @@ def load_config(path=None) -> Config:
         raise ConfigError("slots must define non-negative ints for prime, cards, glance")
     if not 0 < cfg.category_cap <= 1:
         raise ConfigError("category_cap must be in (0, 1]")
+    if cfg.media_enabled and not cfg.tts_command:
+        raise ConfigError("media_enabled needs tts_command")
     return cfg
 
 

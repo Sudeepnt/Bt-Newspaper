@@ -33,3 +33,11 @@ pygments BSD-2-Clause, tomli MIT.
 
 Not verified: licenses of newer versions pulled by a fresh `pip install` on the VPS. Re-run
 `pip-licenses` (or read each package's metadata) after upgrading.
+
+## Phase 2a (optional, external programs; not in requirements.txt)
+
+| Tool | Licence | Notes |
+|---|---|---|
+| piper-tts 1.8.0 | **GPL-3.0-or-later** | installed in its own venv, run as a subprocess |
+| Piper voice en_US-lessac-medium | check model card | per-voice licence, not verified here |
+| ffmpeg / ffprobe | LGPL-2.1+ or GPL (build dependent) | used as a subprocess; use an LGPL build |

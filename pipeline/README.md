@@ -81,3 +81,15 @@ Tables: `articles` (status: new / selected_prime / selected_card / selected_glan
 `selections` (one row per slot, since a story can be in several slots; `articles.status` shows the
 strongest one), `fetch_state` (ETag/Last-Modified, last error). `feed.json` prime items carry
 `"script": null` until Phase 2.
+
+## Audio for prime stories (Phase 2a, optional)
+
+Needs `ffmpeg` and a TTS command. Install Piper in a separate venv and download a voice:
+
+    python3 -m venv /opt/piper && /opt/piper/bin/pip install piper-tts
+    cd /opt/voices && /opt/piper/bin/python -m piper.download_voices en_US-lessac-medium
+
+Then in `config.yaml` set `media_enabled: true` and
+`tts_command: ["/opt/piper/bin/piper","--model","/opt/voices/en_US-lessac-medium.onnx","--output_file","{wav}"]`.
+`run` then writes MP3s to `out/media/<id>.mp3` and adds `audio_url` and `duration_s` to prime items in `feed.json`.
+Serve `out/media/` at `audio_base_url`. Reruns skip finished audio.

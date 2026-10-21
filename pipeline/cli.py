@@ -31,6 +31,8 @@ def cmd_run(args) -> int:
             print(f"WARNING: slot '{slot}' has {sel[slot]} of {want} (not enough eligible stories)")
     if failed:
         print(f"WARNING: {len(failed)} source(s) failed: {', '.join(failed)}")
+    if result["media"]:
+        print("audio: " + ", ".join(f"{k} {v}" for k, v in result["media"].items()))
     print(f"feed: {result['feed']}")
     return 0 if len(failed) < len(sources) else 1  # exit 1 only if every source failed
 

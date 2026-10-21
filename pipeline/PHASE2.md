@@ -1,4 +1,18 @@
-# Phase 2 plan (not started): spoken prime stories
+# Phase 2: spoken prime stories
+
+## Status
+- **2a script + audio: built and tested** (`media.py`). Every prime item gets a `script`, and once audio exists,
+  `audio_url` and `duration_s`. Verified end to end with Piper (`en_US-lessac-medium`): 25 stories in ~28 s on a
+  laptop (about 1 s per story); not yet timed on the 2 vCPU VPS.
+- **2b avatar video: NOT started.** Waiting on the open questions at the bottom.
+- Engine is any command set as `tts_command` in `config.yaml` (script on stdin, writes `{wav}`), so Piper or
+  Kokoro can be swapped without code changes. Audio is rebuilt only when the script text changes; failures are
+  retried up to `media_max_attempts`, and the feed stays valid without audio.
+- **Licence flag:** `piper-tts` 1.8.0 (pip) is **GPL-3.0-or-later**, as is its voice tooling. We run it as a separate
+  process and do not link or bundle it, but confirm that is acceptable to you. Each voice model has its own
+  licence too (lessac: check its model card before shipping). Kokoro-82M (Apache-2.0) is the non-GPL fallback.
+
+## Original plan
 
 Goal: for each `prime` item, produce `script` (text), an audio file, and an avatar video, all with
 open-source tools on a 2 vCPU / 8 GB, no-GPU VPS. Nothing here is built or benchmarked yet.
