@@ -602,8 +602,13 @@ html.is-reading, html.is-reading body { overflow: hidden; }
 @keyframes seek-flash { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
 .countdown-num { position: absolute; inset: 0; display: none; place-items: center; color: #fff; font: 700 1.75rem/1 'DM Sans', Arial, sans-serif; font-variant-numeric: tabular-nums; }
 .countdown-label { display: none; margin-top: 12px; padding: 5px 10px; border-radius: 999px; background: #000b; color: #fff; white-space: nowrap; font: 600 .75rem/1.2 'DM Sans', Arial, sans-serif; }
-.is-counting .microphone-circle > svg:not(.countdown-ring) { display: none; }
+.is-counting .microphone-circle > svg:not(.countdown-ring):not(.stop-icon) { display: none; }
 .is-counting .countdown-num { display: grid; }
 .is-counting .countdown-label { display: block; }
 .is-counting .microphone-circle { cursor: pointer; background: #091b26b0; }
 .microphone-circle .countdown-ring { stroke-width: 4; }
+.microphone-circle .stop-icon { display: none; }
+/* while counting down, pointing at the circle (or focusing it) swaps the number for a stop icon: "tap to stay here" */
+.is-counting .microphone-circle:hover, .is-counting .play-news:focus-visible .microphone-circle { background: #c6382ecc; border-color: #fff; }
+.is-counting .microphone-circle:hover .countdown-num, .is-counting .play-news:focus-visible .countdown-num { display: none; }
+.is-counting .microphone-circle:hover > .stop-icon, .is-counting .play-news:focus-visible .stop-icon { display: block; }

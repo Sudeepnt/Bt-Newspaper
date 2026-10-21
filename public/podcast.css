@@ -93,3 +93,32 @@ body.podcast-body { overflow: hidden; }
   .headline-select { grid-template-columns: 19px 10px 49px minmax(0,1fr) 26px; column-gap: 3px; }
   .headline-title { font-size: .8125rem; }
 }
+
+/* Desktop: player on the left, the whole lineup (all headlines) scrolling on the right */
+@media (min-width: 900px) {
+  .podcast-page { display: grid; grid-template-columns: minmax(400px, 480px) minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); column-gap: clamp(32px, 4vw, 72px); padding-bottom: 24px; }
+  .podcast-page .sticky-masthead, .podcast-page .view-switch { grid-column: 1 / -1; }
+  .brief { grid-column: 1; grid-row: 3; align-self: start; margin: 0; }
+  .brief-cover { height: 320px; padding: 30px 28px 20px; }
+  .brief-cover h1 { max-width: 380px; font-size: 2.6rem; }
+  .brief-subtitle { margin-top: 10px; font-size: 1.3rem; }
+  .brief-intro { display: block; max-width: 330px; margin-top: 12px; font-size: .9375rem; line-height: 1.4; }
+  .brief-eyebrow { font-size: .75rem; }
+  .brief-player { padding: 14px 20px 16px; }
+  .player-controls { grid-template-columns: 40px minmax(0, 1fr) 60px minmax(0, 1fr) 40px 46px; min-height: 64px; }
+  .play-main { width: 60px; height: 60px; }
+  .brief-facts { display: grid; margin-top: 12px; padding-top: 12px; }
+  .brief-facts strong { font-size: .9375rem; }
+  .brief-facts small { font-size: .8125rem; }
+  .player-times { font-size: .8125rem; }
+  .lineup { grid-column: 2; grid-row: 3; margin: 0; }
+  .lineup h2 { margin: 6px 0 14px; font-size: 2.4rem; }
+  .lineup-kicker { font-size: .75rem; }
+  .lineup-kicker span:last-child { font-size: .75rem; }
+  .headline-list { --headline-row-height: 66px; flex: 1 1 auto; scrollbar-width: thin; }
+  .headline-select { grid-template-columns: 38px 16px 130px minmax(0, 1fr) 54px; column-gap: 10px; padding: 6px 4px; }
+  .headline-index { font-size: .8125rem; }
+  .headline-category { font-size: .6875rem; }
+  .headline-title { font-size: 1.1875rem; }
+  .headline-time { font-size: .8125rem; }
+}

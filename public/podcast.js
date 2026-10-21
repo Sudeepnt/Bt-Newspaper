@@ -51,12 +51,21 @@ const headlineData = [
   ['World', 'The infrastructure race reaches beyond software'],
 ];
 
-const duration = 428;
-const headlines = headlineData.map(([category, title, start], index) => ({
-  category,
-  title,
-  start: start ?? Math.round(210 + (index - 6) * (213 / 43)),
-}));
+// When the pipeline built a real episode (feed.podcast) the page plays it; otherwise it shows the built-in sample.
+const episode = window.liveFeed && window.liveFeed.podcast;
+let duration = episode ? episode.duration_s : 428;
+const headlines = episode
+  ? episode.chapters.map((chapter) => ({ category: chapter.category, title: chapter.title, start: chapter.start }))
+  : headlineData.map(([category, title, start], index) => ({
+    category,
+    title,
+    start: start ?? Math.round(210 + (index - 6) * (213 / 43)),
+  }));
+const audio = episode ? new Audio() : null;
+if (audio) {
+  audio.preload = 'none';                                 // nothing is downloaded until someone presses play
+  audio.src = episode.audio_url;
+}
 const escapeText = (value) => String(value).replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 })[character]);
@@ -70,7 +79,7 @@ const speedButton = document.querySelector('#speed-button');
 const speeds = [1, 1.25, 1.5, 2];
 let speedIndex = 0;
 let playing = false;
-let position = 42;
+let position = episode ? 0 : 42;
 let activeHeadline = 0;
 
 function renderHeadlines() {
@@ -124,19 +133,43 @@ for (const [index, wave] of [...document.querySelectorAll('.waveform')].entries(
 }
 
 renderHeadlines();
+if (episode) {                                            // real numbers instead of the sample's
+  const minutes = Math.max(1, Math.round(duration / 60));
+  document.querySelector('.brief-subtitle').textContent = `${headlines.length} headlines in ${minutes} min`;
+  document.querySelector('.player-times time:last-child').textContent = formatTime(duration);
+  const facts = document.querySelectorAll('.brief-facts strong');
+  facts[0].textContent = headlines.length;
+  facts[1].textContent = `${minutes} min`;
+  document.querySelector('.lineup-kicker span:last-child').textContent = `${headlines.length} headlines`;
+  list.setAttribute('aria-label', `Scroll through all ${headlines.length} headlines`);
+  progress.max = Math.floor(duration);
+}
 setPosition(position);
 
+function seekTo(seconds) {
+  const target = Math.max(0, Math.min(duration, seconds));
+  if (audio) audio.currentTime = target; else setPosition(target);
+}
+
 mainPlay.addEventListener('click', () => {
+  if (audio) {
+    if (audio.paused || audio.ended) {
+      if (audio.ended) audio.currentTime = 0;
+      audio.play().catch(() => setPlaying(false));
+    } else audio.pause();
+    return;
+  }
   if (position >= duration) setPosition(0);
   setPlaying(!playing);
 });
 document.querySelectorAll('[data-skip]').forEach((button) => {
-  button.addEventListener('click', () => setPosition(position + Number(button.dataset.skip)));
+  button.addEventListener('click', () => seekTo(position + Number(button.dataset.skip)));
 });
-progress.addEventListener('input', () => setPosition(Number(progress.value)));
+progress.addEventListener('input', () => seekTo(Number(progress.value)));
 speedButton.addEventListener('click', () => {
   speedIndex = (speedIndex + 1) % speeds.length;
   const speed = speeds[speedIndex];
+  if (audio) audio.playbackRate = speed;
   speedButton.textContent = `${speed}×`;
   speedButton.setAttribute('aria-label', `Playback speed, ${speed} times`);
 });
@@ -144,11 +177,31 @@ list.addEventListener('click', (event) => {
   const button = event.target.closest('[data-play-headline]');
   if (!button) return;
   const headline = Number(button.dataset.playHeadline);
-  setPosition(headlines[headline].start);
-  setPlaying(true);
+  seekTo(headlines[headline].start);
+  if (audio) audio.play().catch(() => setPlaying(false)); else setPlaying(true);
 });
+
+if (audio) {
+  audio.addEventListener('timeupdate', () => setPosition(audio.currentTime));
+  audio.addEventListener('play', () => setPlaying(true));
+  audio.addEventListener('pause', () => setPlaying(false));
+  audio.addEventListener('ended', () => setPlaying(false));
+  if ('mediaSession' in navigator) {                      // lock screen / headphone buttons
+    navigator.mediaSession.metadata = new MediaMetadata({ title: 'Today’s Bought Brief', artist: 'Bought.', album: 'The daily brief' });
+    const step = (delta) => () => seekTo(audio.currentTime + delta);
+    const chapter = (delta) => () => {
+      const next = Math.max(0, Math.min(headlines.length - 1, activeHeadline + delta));
+      seekTo(headlines[next].start);
+    };
+    for (const [action, handler] of [['play', () => audio.play()], ['pause', () => audio.pause()], ['seekbackward', step(-15)],
+      ['seekforward', step(15)], ['previoustrack', chapter(-1)], ['nexttrack', chapter(1)]]) {
+      try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) { /* unsupported action */ }
+    }
+  }
+}
+
 setInterval(() => {
-  if (!playing) return;
+  if (audio || !playing) return;
   setPosition(position + .25 * speeds[speedIndex]);
   if (position >= duration) setPlaying(false);
 }, 250);

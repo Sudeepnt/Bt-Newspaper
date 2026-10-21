@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#efece5">
   <title>Bought. — Today's Brief</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="podcast.css">
+  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="podcast.css?v=2">
 </head>
 <body class="podcast-body">
   <main class="page podcast-page">
@@ -103,6 +103,17 @@
     </section>
   </main>
   <script src="language.js"></script>
-  <script src="podcast.js"></script>
+  <script>
+    // Use the pipeline's real episode when the feed has one; otherwise podcast.js shows its built-in sample.
+    (async () => {
+      try {
+        const res = await fetch('live/feed.json', { cache: 'no-cache' });
+        if (res.ok) window.liveFeed = await res.json();
+      } catch (e) { /* no feed: sample brief */ }
+      const el = document.createElement('script');
+      el.src = 'podcast.js?v=2';
+      document.body.append(el);
+    })();
+  </script>
 </body>
 </html>

@@ -401,7 +401,7 @@ function renderStory(story, number, saveKey = number) {
           : `<img class="hero-image" src="${story.image}" alt="${escapeStoryText(story.imageAlt)}" style="object-position: ${escapeStoryText(story.imagePosition)}" loading="${loading}">`}
         <span class="video-story-number" aria-label="Story ${number} of 50">${number} / 50</span>
         ${story.video ? `<button class="play-news" type="button" aria-label="Play the news: ${escapeStoryText(story.title)}">
-          <span class="microphone-circle">${microphoneIcon}<b class="countdown-num" aria-hidden="true"></b><svg class="countdown-ring" viewBox="0 0 70 70" aria-hidden="true" focusable="false"><circle cx="35" cy="35" r="32" /></svg></span>
+          <span class="microphone-circle">${microphoneIcon}<b class="countdown-num" aria-hidden="true"></b><svg class="stop-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2" /></svg><svg class="countdown-ring" viewBox="0 0 70 70" aria-hidden="true" focusable="false"><circle cx="35" cy="35" r="32" /></svg></span>
           <span class="countdown-label" aria-live="polite"></span>
         </button>
         <span class="seek-flash" aria-hidden="true"></span>
