@@ -612,3 +612,16 @@ html.is-reading, html.is-reading body { overflow: hidden; }
 .is-counting .microphone-circle:hover, .is-counting .play-news:focus-visible .microphone-circle { background: #c6382ecc; border-color: #fff; }
 .is-counting .microphone-circle:hover .countdown-num, .is-counting .play-news:focus-visible .countdown-num { display: none; }
 .is-counting .microphone-circle:hover > .stop-icon, .is-counting .play-news:focus-visible .stop-icon { display: block; }
+
+/* Desktop: the Bought Spotlight spans the whole row, framed by three thin rules above and below (like the section breaks) */
+@media (min-width: 900px) {
+  .prime-section > .spotlight-placement, .glance-section .spotlight-placement, #edition-stories > .spotlight-placement {
+    grid-column: 1 / -1; align-self: stretch; max-width: none; margin: 20px 0 30px; padding: 0; border: 0;
+  }
+  .spotlight-placement::before, .spotlight-placement::after {
+    content: ''; display: block; height: 9px; flex: none;
+    background: linear-gradient(#b4b0a8, #b4b0a8) 0 0 / 100% 1px no-repeat, linear-gradient(#b4b0a8, #b4b0a8) 0 4px / 100% 1px no-repeat, linear-gradient(#b4b0a8, #b4b0a8) 0 8px / 100% 1px no-repeat;
+  }
+  .spotlight-placement::before { margin-bottom: 16px; }
+  .spotlight-placement::after { margin-top: 18px; }
+}
