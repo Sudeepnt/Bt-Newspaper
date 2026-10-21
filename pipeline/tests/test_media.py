@@ -178,24 +178,24 @@ def test_badges_rules_priority_and_engagement():
         return {"id": i, "headline": "A thing happens", "category": "Technology", "source": "Other",
                 "published_at": "2026-10-13T00:00:00Z", **kw}
     feed = {"generated_at": "2026-10-13T04:00:00Z",
-            "prime": [item("a", category="AI", source="The Wire", published_at="2026-10-13T03:00:00Z"),   # exclusive + ai + new
-                      item("b", headline="OpenAI ships a new model"), item("c"), item("d")],
+            "prime": [item("a", category="AI", source="The Wire", published_at="2026-10-13T03:00:00Z"),   # exclusive + new
+                      item("b", headline="OpenAI ships a new model", category="AI"), item("c"), item("d")],
             "cards": [item("e")], "glance": [item("f"), item("g")]}
     engagement = {"c": {"views": 500, "reads": 40}, "d": {"views": 300}, "f": {"glances": 90}, "g": {"glances": 90, "reads": 10},
                   "e": {"reads": 41}}
     counts = assign_badges(cfg, feed, engagement)
     ids = lambda x: [b["id"] for b in x["badges"]]
-    assert ids(feed["prime"][0]) == ["exclusive", "ai"]               # three earned, strongest two kept
-    assert ids(feed["prime"][1]) == ["ai"]                            # headline about AI, not the category
-    assert ids(feed["prime"][2]) == ["most-viewed"]                   # 500 beats 300
+    assert ids(feed["prime"][0]) == ["exclusive"]                     # exclusive + new earned: only the strongest is shown
+    assert ids(feed["prime"][1]) == []                                # there is no AI badge, whatever the story is about
+    assert ids(feed["prime"][2]) == ["most-viewed"]                   # 500 beats 300 (and it also won most-read? no: one badge)
     assert ids(feed["cards"][0]) == ["most-read"]                     # 41 reads beats 40
     assert ids(feed["glance"][0]) == [] and ids(feed["glance"][1]) == []   # a tie in glances wins nothing
     assert feed["prime"][3]["badges"] == []
-    assert counts["ai"] == 2
+    assert "ai" not in counts and all(len(i["badges"]) <= 1 for s in ("prime", "cards", "glance") for i in feed[s])
     many = {"generated_at": "2026-10-13T04:00:00Z", "cards": [], "glance": [],
-            "prime": [item(str(n), category="AI") for n in range(8)]}
-    assert assign_badges(replace(cfg, badges_max_per_type=3), many, {})["ai"] == 3       # not every AI story gets it
-    assert [i["id"] for i in many["prime"] if i["badges"]] == ["0", "1", "2"]             # the best-ranked ones
+            "prime": [item(str(n), published_at="2026-10-13T03:00:00Z") for n in range(8)]}
+    assert assign_badges(replace(cfg, badges_max_per_type=3), many, {})["new"] == 3        # "New" only on the first few
+    assert [i["id"] for i in many["prime"] if i["badges"]] == ["0", "1", "2"]
     many["cards"] = [dict(many["prime"][0]), dict(many["prime"][1])]                       # same articles again in another slot
     assign_badges(replace(cfg, badges_max_per_type=3), many, {})
     assert [i["id"] for i in many["prime"] if i["badges"]] == ["0", "1", "2"]             # duplicates do not cost a story its badge

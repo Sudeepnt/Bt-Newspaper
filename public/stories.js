@@ -105,7 +105,7 @@ const imageStories = [
   {
     category: 'Business',
     title: 'Starship takes flight as reusable rocket ambitions grow',
-    badges: [{ id: 'most-viewed', label: 'Most viewed' }, { id: 'new', label: 'New' }],
+    badges: [{ id: 'most-viewed', label: 'Most viewed' }],
     deck: 'The launch puts attention on rapid turnaround, recovery, and the next phase of space travel.',
     matters: 'Reliable reuse could lower the cost and increase the pace of future launches.',
     image: 'assets/swipe-rocket.jpg',
@@ -196,7 +196,7 @@ const glanceStories = [
   {
     category: 'AI',
     title: 'Agents find a place in everyday work',
-    badges: [{ id: 'ai', label: 'AI' }, { id: 'most-read', label: 'Most read' }],
+    badges: [{ id: 'most-read', label: 'Most read' }],
     deck: 'Teams are testing where software can handle a complete task, not just a prompt.',
     matters: 'Useful automation depends on reliable handoffs and clear human control.',
   },
@@ -370,7 +370,6 @@ const escapeStoryText = (value) => String(value).replace(/[&<>"']/g, (character)
 // Badges come from the pipeline (feed item.badges: [{id, label}]); the samples below carry a few by hand.
 const badgeIcons = {
   exclusive: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m8 1 2.1 4.6 5 .6-3.7 3.4 1 5L8 12.1 3.6 14.6l1-5L.9 6.2l5-.6z"/></svg>',
-  ai: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 1.5 7.3 5 11 6.3 7.3 7.6 6 11.2 4.7 7.6 1 6.3 4.7 5zM12 8.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',
   new: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="4"/></svg>',
   'most-viewed': '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8.6 1c.3 2.2-.6 3.3-1.8 4.6C5.700 6.900 4.500 8.100 4.500 10a3.500 3.500 0 0 0 7 0c0-1.500-.6-2.500-1.400-3.400-.2.900-.7 1.400-1.300 1.600.5-2.300.2-4.700-.2-7.200z"/></svg>',
   'most-read': '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 2.500h4.500A1.500 1.500 0 0 1 8 4v9.500a1.500 1.500 0 0 0-1.500-1.500H2zm12 0H9.500A1.500 1.500 0 0 0 8 4v9.500a1.500 1.500 0 0 1 1.500-1.500H14z"/></svg>',

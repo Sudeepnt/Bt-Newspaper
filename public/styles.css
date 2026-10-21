@@ -637,16 +637,10 @@ html.is-reading, html.is-reading body { overflow: hidden; }
 .swipe-category { color: var(--cat-light); }
 .story-tags, .swipe-tags, .glance-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 8px; min-width: 0; }
 .badges { display: inline-flex; flex-wrap: wrap; gap: 5px; }
-.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 6px; border-radius: 999px; font: 700 .625rem/1.35 'DM Sans', Arial, sans-serif; letter-spacing: .045em; text-transform: uppercase; white-space: nowrap; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 6px; border-radius: 999px; background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px currentColor; font: 700 .625rem/1.35 'DM Sans', Arial, sans-serif; letter-spacing: .045em; text-transform: uppercase; white-space: nowrap; }
 .badge svg { flex: none; width: 11px; height: 11px; fill: currentColor; }
-.badge-exclusive { background: #15110a; color: #f4c455; box-shadow: inset 0 0 0 1px #f4c45566; }
-.badge-ai { background: linear-gradient(90deg, #6a4cd8, #2f86e6); color: #fff; }
-.badge-new { background: #fff1ef; color: #c6382e; box-shadow: inset 0 0 0 1px #efc2bc; }
 .badge-new svg { width: 7px; height: 7px; }
-.badge-most-viewed { background: #ff7a1a; color: #fff; }
-.badge-most-read { background: #1d6b4f; color: #fff; }
-.badge-most-glanced { background: #0e8a96; color: #fff; }
-.swipe-tags .badge-new { background: #ffffff26; color: #fff; box-shadow: inset 0 0 0 1px #ffffff66; }
+.swipe-tags .badge { color: #fff; }
 @media (min-width: 900px) {
   .lead-story { border-top: 3px solid var(--cat); }
   .glance-item { border-top-color: var(--cat); }

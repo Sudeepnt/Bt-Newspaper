@@ -1,13 +1,12 @@
-"""Badges on stories: what a story is, at a glance. Each item gets `badges: [{id, label}]` (at most two, strongest first).
+"""Badges on stories: what a story is, at a glance. Each item gets `badges: [{id, label}]` with at most ONE badge (the strongest).
 
   exclusive      its source is listed in `badges_exclusive_sources` (outlets we have an exclusive arrangement with; we
                  cannot know exclusivity from the feeds themselves, so this is configuration, never a guess)
   most-viewed    the most-played story of the issue  (engagement: views; prime and cards)
   most-read      the most-opened story of the issue  (engagement: reads; any slot)
   most-glanced   the most-seen story in the glance list (engagement: glances; glance slot)
-  ai             category AI, or the headline is plainly about AI
   new            published within `badges_new_hours` of the feed time
-  AI and New go to at most `badges_max_per_type` stories (the best-ranked ones), so a badge stays a signal.
+  New goes to at most `badges_max_per_type` stories (the best-ranked ones), so a badge stays a signal.
 
 The "most" badges come from reader counts in `engagement_file` (JSON {article_id: {views, reads, glances}}), written by
 the page's collector. A winner needs at least `badges_min_events` of that count, so a quiet day shows none.
@@ -20,11 +19,10 @@ from datetime import datetime
 from pathlib import Path
 
 LABELS = {"exclusive": "Exclusive", "most-viewed": "Most viewed", "most-read": "Most read", "most-glanced": "Most glanced",
-          "ai": "AI", "new": "New"}
-PRIORITY = ("exclusive", "most-viewed", "most-read", "most-glanced", "ai", "new")
+          "new": "New"}
+PRIORITY = ("exclusive", "most-viewed", "most-read", "most-glanced", "new")
 MOST = {"most-viewed": ("views", ("prime", "cards")), "most-read": ("reads", ("prime", "cards", "glance")),
         "most-glanced": ("glances", ("glance",))}
-AI_HEADLINE = re.compile(r"\b(AI|LLMs?|GPT|chatbots?|agentic|OpenAI|Anthropic)\b|\bgenerative\b|\bAI agents?\b")
 
 
 def _parse(ts: str):
@@ -54,8 +52,6 @@ def assign_badges(cfg, feed: dict, engagement: dict | None = None) -> dict:
             got = earned.setdefault(item["id"], set())
             if item.get("source", "").lower() in exclusive:
                 got.add("exclusive")
-            if item.get("category") == "AI" or AI_HEADLINE.search(item.get("headline", "")):
-                got.add("ai")
             if now and item.get("published_at"):
                 try:
                     if 0 <= (now - _parse(item["published_at"])).total_seconds() <= cfg.badges_new_hours * 3600:
@@ -70,7 +66,7 @@ def assign_badges(cfg, feed: dict, engagement: dict | None = None) -> dict:
             winners = [i for c, i in pool if c == top]
             if len(winners) == 1:
                 earned[winners[0]].add(badge)
-    for badge in ("ai", "new"):                             # only the first few (feed order = ranking) keep these
+    for badge in ("new",):                                  # only the first few (feed order = ranking) keep this
         holders = list(dict.fromkeys(                       # an article can sit in several slots: count it once
             i["id"] for s in ("prime", "cards", "glance") for i in feed.get(s, []) if badge in earned.get(i["id"], ())))
         for dropped in holders[cfg.badges_max_per_type:]:
@@ -78,7 +74,7 @@ def assign_badges(cfg, feed: dict, engagement: dict | None = None) -> dict:
     counts = {}
     for slot in ("prime", "cards", "glance"):
         for item in feed.get(slot, []):
-            ids = [b for b in PRIORITY if b in earned.get(item["id"], ())][:2]
+            ids = [b for b in PRIORITY if b in earned.get(item["id"], ())][:1]       # one badge per story
             item["badges"] = [{"id": b, "label": LABELS[b]} for b in ids]
             for b in ids:
                 counts[b] = counts.get(b, 0) + 1

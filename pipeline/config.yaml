@@ -44,7 +44,7 @@ avatar_looks:
   Founders & startups: {character: anime,  style: funky}
   Product launches:    {character: mascot, style: studio}
 
-# Badges on stories (AI, New, Exclusive, and Most viewed / read / glanced once the page's collector writes engagement_file).
+# Badges on stories (New, Exclusive, and Most viewed / read / glanced once the page's collector writes engagement_file).
 badges_enabled: true
 badges_exclusive_sources: []        # outlets we have an exclusive arrangement with; nothing is "Exclusive" otherwise
 badges_new_hours: 3
