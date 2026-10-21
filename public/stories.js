@@ -501,9 +501,9 @@ function renderGlances() {
     const imageSide = index % 2 === 0 ? 'start' : 'end';
     const item = `
       <article class="glance-item ${categoryClass(story.category)}${story.deck ? '' : ' is-brief'} is-image-${imageSide}" id="story-${number}" aria-labelledby="glance-title-${number}">
-        <div class="glance-visual" aria-hidden="true"><img src="${image}" alt="" loading="${index < 4 ? 'eager' : 'lazy'}"></div>
+        <div class="glance-visual" aria-hidden="true"><img src="${image}" alt="" loading="${index < 4 ? 'eager' : 'lazy'}"><span class="glance-image-number">${number} / 50</span></div>
         <div class="glance-copy">
-          <div class="glance-meta"><span class="glance-tags"><span class="glance-category">${escapeStoryText(story.category)}</span>${renderBadges(story.badges)}</span><span class="glance-number" aria-label="Story ${number} of 50">${number} / 50</span></div>
+          <div class="glance-meta"><span class="glance-tags"><span class="glance-category">${escapeStoryText(story.category)}</span>${renderBadges(story.badges)}</span><span class="sr-only">Story ${number} of 50</span></div>
           <h3 id="glance-title-${number}"><button class="story-title-button" type="button" data-open-story="${number}" aria-label="Read full story: ${escapeStoryText(story.title)}">${escapeStoryText(story.title)}</button></h3>
         </div>
         <div class="glance-facts">

@@ -670,3 +670,8 @@ html.is-reading, html.is-reading body { overflow: hidden; }
 @media (min-width: 900px) {
   .video-poster.has-video.is-pinned { left: auto; right: clamp(16px, 2.5vw, 48px); width: min(480px, 34vw); }
 }
+
+/* The story count sits on the glance picture, like the video and swipe cards */
+.glance-visual { position: relative; }
+.glance-visual::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, #0000008c 0%, transparent 38%); pointer-events: none; }
+.glance-image-number { position: absolute; z-index: 1; top: 8px; left: 9px; color: #fff; font: 500 .75rem/1.2 'DM Sans', Arial, sans-serif; font-variant-numeric: tabular-nums; text-shadow: 0 1px 4px #0009; }
