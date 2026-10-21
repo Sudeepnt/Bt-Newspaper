@@ -33,6 +33,8 @@ def cmd_run(args) -> int:
         print(f"WARNING: {len(failed)} source(s) failed: {', '.join(failed)}")
     if result["media"]:
         print("audio: " + ", ".join(f"{k} {v}" for k, v in result["media"].items()))
+    if result.get("translations"):
+        print("translations: " + ", ".join(f"{k} {v}" for k, v in result["translations"].items()))
     if result.get("podcast"):
         print("podcast: " + ", ".join(f"{k} {v}" for k, v in result["podcast"].items()))
     print(f"feed: {result['feed']}")
@@ -83,6 +85,23 @@ def cmd_badges(args) -> int:
     return 0
 
 
+def cmd_translate(args) -> int:
+    """Translate the current feed.json's stories into translate_languages (no new ingest)."""
+    import json
+    from .translate import attach_translations, build_translations
+    cfg = load_config(args.config)
+    if not cfg.translate_languages:
+        raise ConfigError("set translate_languages and translate_command first")
+    feed_path = paths(args.dry_run)[1]
+    feed = json.loads(feed_path.read_text())
+    cache = ROOT / "data" / ("translations_dry_run.json" if args.dry_run else "translations.json")
+    res = build_translations(cfg, feed, feed_path.parent / "media", cache)
+    available = attach_translations(cfg, feed, feed_path.parent, cache)
+    feed_path.write_text(json.dumps(feed, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print("translations: " + ", ".join(f"{k} {v}" for k, v in res.items()) + f" | available: {', '.join(available) or 'none'}")
+    return 0 if not res["failed"] and not res["deferred"] else 1
+
+
 def cmd_podcast(args) -> int:
     """Build (or finish building) the podcast episode for the current feed.json, without a new ingest."""
     import json
@@ -107,6 +126,7 @@ def main(argv=None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
     _add_common(sub.add_parser("run", help="one full cycle"))
     _add_common(sub.add_parser("show", help="print the current selection"))
+    _add_common(sub.add_parser("translate", help="translate the stories for the language picker"))
     _add_common(sub.add_parser("badges", help="refresh the story badges from the latest engagement counts"))
     _add_common(sub.add_parser("podcast", help="narrate every story into one episode (uses the existing feed.json)"))
     pc = sub.add_parser("clip", help="render a produced clip from a spec file (see pipeline/clips/)")
@@ -116,7 +136,7 @@ def main(argv=None) -> int:
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING,
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     try:
-        return {"run": cmd_run, "show": cmd_show, "clip": cmd_clip, "podcast": cmd_podcast, "badges": cmd_badges}[args.cmd](args)
+        return {"run": cmd_run, "show": cmd_show, "clip": cmd_clip, "podcast": cmd_podcast, "badges": cmd_badges, "translate": cmd_translate}[args.cmd](args)
     except ConfigError as e:
         print(f"config error: {e}", file=sys.stderr)
         return 2

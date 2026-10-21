@@ -192,6 +192,38 @@ def test_badges_rules_priority_and_engagement():
     assert ids(feed["glance"][0]) == [] and ids(feed["glance"][1]) == []   # a tie in glances wins nothing
     assert feed["prime"][3]["badges"] == []
     assert counts["ai"] == 2
+    many = {"generated_at": "2026-10-13T04:00:00Z", "cards": [], "glance": [],
+            "prime": [item(str(n), category="AI") for n in range(8)]}
+    assert assign_badges(replace(cfg, badges_max_per_type=3), many, {})["ai"] == 3       # not every AI story gets it
+    assert [i["id"] for i in many["prime"] if i["badges"]] == ["0", "1", "2"]             # the best-ranked ones
+    many["cards"] = [dict(many["prime"][0]), dict(many["prime"][1])]                       # same articles again in another slot
+    assign_badges(replace(cfg, badges_max_per_type=3), many, {})
+    assert [i["id"] for i in many["prime"] if i["badges"]] == ["0", "1", "2"]             # duplicates do not cost a story its badge
     quiet = {"generated_at": "2026-10-13T04:00:00Z", "prime": [item("c")], "cards": [], "glance": []}
     assign_badges(cfg, quiet, {"c": {"views": 5}})
     assert quiet["prime"][0]["badges"] == []                          # under badges_min_events: a quiet day shows none
+
+
+def test_translations_cached_attached_and_only_new_text_is_sent(tmp_path):
+    from pipeline.translate import attach_translations, build_translations
+    log = tmp_path / "calls.txt"
+    fake = ("import sys,json;t=json.load(sys.stdin);open(%r,'a').write(sys.argv[1]+':'+str(len(t))+'\\n');"
+            "print(json.dumps([sys.argv[1].upper()+' '+x for x in t]))" % str(log))
+    cfg = replace(load_config(), translate_languages=("hi-IN", "es-ES"), translate_command=(sys.executable, "-c", fake, "{lang}"))
+    feed = {"prime": [{"id": "a", "headline": "One", "summary": "Sum one."}, {"id": "b", "headline": "Two", "summary": "Sum one."}],
+            "cards": [], "glance": []}
+    cache = tmp_path / "t.json"
+    st = build_translations(cfg, feed, tmp_path, cache)
+    assert st["translated"] == 6 and st["failed"] == 0                  # 3 unique texts (the repeated summary counts once) x 2 languages
+    assert log.read_text().splitlines() == ["hi:3", "es:3"]              # M2M code for hi-IN is hi; one call per language
+    assert attach_translations(cfg, feed, tmp_path, cache) == ["hi-IN", "es-ES"]
+    assert feed["translations_available"] == ["hi-IN", "es-ES"]
+    data = json.loads((tmp_path / "translations" / "hi-IN.json").read_text())
+    assert data["a"] == {"headline": "HI One", "summary": "HI Sum one."}
+    feed["prime"].append({"id": "c", "headline": "Three", "summary": "Sum one."})     # one new text: only it is translated
+    log.write_text("")
+    assert build_translations(cfg, feed, tmp_path, cache)["translated"] == 2
+    assert log.read_text().splitlines() == ["hi:1", "es:1"]
+    bad = replace(cfg, translate_command=(sys.executable, "-c", "import sys;sys.exit(3)"), translate_languages=("de",))
+    st = build_translations(bad, feed, tmp_path, cache)
+    assert st["failed"] == 1 and attach_translations(bad, feed, tmp_path, cache) == []   # a failed language is simply not offered

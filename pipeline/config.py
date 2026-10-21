@@ -57,11 +57,18 @@ class Config:
     podcast_speed: float = 1.0
     podcast_gap_seconds: float = 0.7
     podcast_time_budget_seconds: float = 1500
+    # Translations for the page's language picker. translate_command reads a JSON list on stdin and prints a JSON list
+    # ({lang} is replaced by the language code); see translate_m2m.py. Locales are the picker's, e.g. hi-IN, es-ES, ar.
+    translate_languages: tuple = ()
+    translate_command: tuple = ()
+    translate_timeout_seconds: float = 1800
+    translate_time_budget_seconds: float = 3000
     # Badges on stories (see badges.py). Off by default; the "most" badges need engagement_file from the page's collector.
     badges_enabled: bool = False
     badges_exclusive_sources: tuple = ()
     badges_new_hours: float = 3
     badges_min_events: int = 30
+    badges_max_per_type: int = 3           # AI / New go to the first few stories only, so badges stay special
     engagement_file: str = ""
     # Phase 2b: presenter video (needs media_enabled). Paths are relative to the project root.
     avatar_enabled: bool = False
@@ -99,6 +106,9 @@ def load_config(path=None) -> Config:
         raise ConfigError(f"unknown config keys: {sorted(unknown)}")
     if isinstance(raw.get("tts_command"), list):
         raw["tts_command"] = tuple(map(str, raw["tts_command"]))
+    for key in ("translate_languages", "translate_command"):
+        if isinstance(raw.get(key), list):
+            raw[key] = tuple(map(str, raw[key]))
     if isinstance(raw.get("badges_exclusive_sources"), list):
         raw["badges_exclusive_sources"] = tuple(map(str, raw["badges_exclusive_sources"]))
     if isinstance(raw.get("avatar_fallback_images"), list):
@@ -118,6 +128,8 @@ def load_config(path=None) -> Config:
             raise ConfigError(f"avatar_looks[{cat!r}] needs character: photo|anime|mascot and style: studio|channel|funky")
     if cfg.avatar_enabled and not cfg.media_enabled:
         raise ConfigError("avatar_enabled needs media_enabled (the video is driven by the audio)")
+    if cfg.translate_languages and not cfg.translate_command:
+        raise ConfigError("translate_languages needs translate_command")
     if cfg.podcast_enabled and not cfg.tts_command:
         raise ConfigError("podcast_enabled needs tts_command")
     if cfg.media_enabled and not cfg.tts_command:

@@ -7,6 +7,7 @@
   most-glanced   the most-seen story in the glance list (engagement: glances; glance slot)
   ai             category AI, or the headline is plainly about AI
   new            published within `badges_new_hours` of the feed time
+  AI and New go to at most `badges_max_per_type` stories (the best-ranked ones), so a badge stays a signal.
 
 The "most" badges come from reader counts in `engagement_file` (JSON {article_id: {views, reads, glances}}), written by
 the page's collector. A winner needs at least `badges_min_events` of that count, so a quiet day shows none.
@@ -69,6 +70,11 @@ def assign_badges(cfg, feed: dict, engagement: dict | None = None) -> dict:
             winners = [i for c, i in pool if c == top]
             if len(winners) == 1:
                 earned[winners[0]].add(badge)
+    for badge in ("ai", "new"):                             # only the first few (feed order = ranking) keep these
+        holders = list(dict.fromkeys(                       # an article can sit in several slots: count it once
+            i["id"] for s in ("prime", "cards", "glance") for i in feed.get(s, []) if badge in earned.get(i["id"], ())))
+        for dropped in holders[cfg.badges_max_per_type:]:
+            earned[dropped].discard(badge)
     counts = {}
     for slot in ("prime", "cards", "glance"):
         for item in feed.get(slot, []):

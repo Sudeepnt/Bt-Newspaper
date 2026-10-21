@@ -403,6 +403,7 @@ if (window.liveFeed && window.liveFeed.prime && window.liveFeed.prime.length) {
     video: item.video_url || '',
     poster: item.poster_url || '',
     badges: item.badges || [],
+    id: item.id,
     audio: item.audio_url || '',
     source: item.source,
     link: item.link,
@@ -412,7 +413,7 @@ if (window.liveFeed && window.liveFeed.prime && window.liveFeed.prime.length) {
 function renderStory(story, number, saveKey = number) {
   const loading = number === 1 ? 'eager' : 'lazy';
   return `
-    <article class="lead-story ${categoryClass(story.category)}" id="story-${number}" aria-labelledby="story-title-${number}" data-story-number="${number}" data-save-key="${saveKey}">
+    <article class="lead-story ${categoryClass(story.category)}" id="story-${number}" data-story-id="${escapeStoryText(story.id || '')}" aria-labelledby="story-title-${number}" data-story-number="${number}" data-save-key="${saveKey}">
       <div class="video-poster${story.video ? ' has-video' : ''}">
         ${story.video
           ? `<video class="hero-image" src="${escapeStoryText(story.video)}" ${story.poster ? `poster="${escapeStoryText(story.poster)}" preload="none"` : 'preload="metadata"'} playsinline disablepictureinpicture disableremoteplayback aria-label="AI journalist presenting: ${escapeStoryText(story.title)}"></video>`
@@ -422,6 +423,7 @@ function renderStory(story, number, saveKey = number) {
           <span class="microphone-circle">${microphoneIcon}<b class="countdown-num" aria-hidden="true"></b><svg class="stop-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2" /></svg><svg class="countdown-ring" viewBox="0 0 70 70" aria-hidden="true" focusable="false"><circle cx="35" cy="35" r="32" /></svg></span>
           <span class="countdown-label" aria-live="polite"></span>
         </button>
+        <button class="pin-close" type="button" aria-label="Close the player"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         <span class="seek-flash" aria-hidden="true"></span>
         <span class="video-progress" aria-hidden="true"><i></i></span>` : `<button class="play-news" type="button" aria-label="Play AI journalist news preview">
           <span class="microphone-circle">${microphoneIcon}</span>
@@ -479,7 +481,7 @@ function renderImageCarousel() {
   return `
     <section class="image-swipe-block" aria-label="Image news stories">
       <div class="section-break" aria-hidden="true"><span></span><span></span><span></span></div>
-      <header class="section-marker"><h2>Swipe cards</h2></header>
+      <header class="section-marker"><h2 data-i18n="sec.swipe">Swipe cards</h2></header>
       <div class="image-swipe-card" tabindex="0" aria-roledescription="carousel" aria-label="Image news stories. Swipe or tap the sides to change stories.">
         <div class="swipe-track">${slides}</div>
         <div class="swipe-progress" aria-label="Image story navigation">${progress}</div>
@@ -514,7 +516,7 @@ function renderGlances() {
 
   return `<section class="glance-section" aria-labelledby="glance-heading">
     <div class="section-break" aria-hidden="true"><span></span><span></span><span></span></div>
-    <header class="section-marker"><h2 id="glance-heading">World at a glance</h2></header>
+    <header class="section-marker"><h2 id="glance-heading" data-i18n="sec.glance">World at a glance</h2></header>
     ${items}
   </section>`;
 }
@@ -522,7 +524,7 @@ function renderGlances() {
 const storiesRoot = document.querySelector('#edition-stories');
 storiesRoot.innerHTML = [
   `<section class="prime-section" aria-labelledby="prime-heading">
-    <header class="section-marker prime-marker"><h2 id="prime-heading">The Prime</h2></header>
+    <header class="section-marker prime-marker"><h2 id="prime-heading" data-i18n="sec.prime">The Prime</h2></header>
     ${sampleStories.map((story, index) => renderStory(story, index + 1) + (index === 4 ? renderSpotlightPlacement(1) : index === 9 ? renderSpotlightPlacement(2) : '')).join('')}
   </section>`,
   renderImageCarousel(),
@@ -543,9 +545,13 @@ function closeFullStory() {
   articleOpener = null;
 }
 
+let storyTranslations = null;           // {id: {headline, summary}} for the chosen language, or null (English)
+
 function openFullStory(number, opener) {
-  const story = allStories[number - 1];
-  if (!story) return;
+  const original = allStories[number - 1];
+  if (!original) return;
+  const tr = storyTranslations && original.id && storyTranslations[original.id];
+  const story = tr ? { ...original, title: tr.headline, deck: tr.summary } : original;
   const [opening, continuation] = story.link ? [story.deck, ''] : articleDetails[number - 1] || [story.happened || story.deck, story.matters];
   articleOpener = opener;
   articleOverlayContent.innerHTML = `
@@ -826,9 +832,59 @@ storiesRoot.addEventListener('click', (event) => {
     el.classList.add('is-on');
   }
 
+  // ---- A playing video that scrolls out of view pins itself under the top bar and keeps playing.
+  let pinned = null;                                        // { poster, slot } while a video rides along at the top
+  const wide = window.matchMedia('(min-width: 900px)');
+  const mastheadHeight = () => document.querySelector('.sticky-masthead').getBoundingClientRect().height;
+
+  function pin(poster) {
+    if (pinned) return;
+    const box = poster.getBoundingClientRect();
+    const slot = document.createElement('div');             // keeps the card's height so nothing below jumps
+    slot.className = 'video-slot';
+    slot.style.height = `${box.height}px`;
+    poster.before(slot);
+    if (!wide.matches) { poster.style.left = `${box.left}px`; poster.style.width = `${box.width}px`; }
+    poster.classList.add('is-pinned');
+    pinned = { poster, slot };
+  }
+
+  function unpin() {
+    if (!pinned) return;
+    pinned.poster.classList.remove('is-pinned');
+    pinned.poster.style.left = pinned.poster.style.width = '';
+    pinned.slot.remove();
+    pinned = null;
+  }
+
+  function checkPin() {
+    if (pinned) {                                           // back in view: put it in its place again
+      if (pinned.slot.getBoundingClientRect().top > mastheadHeight() + 4) unpin();
+      return;
+    }
+    const playing = storiesRoot.querySelector('.video-poster.has-video.is-playing');
+    if (playing && playing.getBoundingClientRect().bottom < mastheadHeight() + 24) pin(playing);
+  }
+  let pinFrame = 0;
+  window.addEventListener('scroll', () => {
+    if (!pinFrame) pinFrame = requestAnimationFrame(() => { pinFrame = 0; checkPin(); });
+  }, { passive: true });
+  window.addEventListener('resize', unpin);
+
+  storiesRoot.addEventListener('click', (event) => {
+    const close = event.target.closest('.pin-close');
+    if (!close) return;
+    event.stopPropagation();
+    const poster = close.closest('.video-poster');
+    poster.querySelector('video').pause();
+    cancelCountdown();
+    unpin();
+  }, true);
+
   function playPoster(poster) {
     const video = poster.querySelector('video');
     posters().forEach((other) => { if (other !== poster) other.querySelector('video').pause(); });
+    if (pinned && pinned.poster !== poster) unpin();        // the next video takes over: the old one goes home
     cancelCountdown();
     if (video.ended) video.currentTime = 0;
     return video.play().catch(() => { /* blocked by the browser: the mic button stays for a tap */ });
@@ -874,7 +930,10 @@ storiesRoot.addEventListener('click', (event) => {
     const video = poster.querySelector('video');
     const bar = poster.querySelector('.video-progress i');
     video.addEventListener('play', () => poster.classList.add('is-playing'));
-    video.addEventListener('pause', () => poster.classList.remove('is-playing'));
+    video.addEventListener('pause', () => {
+      poster.classList.remove('is-playing');
+      if (pinned && pinned.poster === poster && !video.ended) unpin();      // paused: back to its place (ended keeps the countdown on top)
+    });
     video.addEventListener('timeupdate', () => { bar.style.width = `${video.duration ? (video.currentTime / video.duration) * 100 : 0}%`; });
     video.addEventListener('ended', () => {
       poster.classList.remove('is-playing');
@@ -901,3 +960,24 @@ storiesRoot.addEventListener('click', (event) => {
     });
   });
 })();
+
+// ---- Language: the picker (language.js) announces a choice; feed stories swap to their translation (or back to English).
+async function applyStoryLanguage(locale, name = '', announce = false) {
+  storyTranslations = await window.loadTranslations(locale);
+  if (announce && locale !== 'en' && !storyTranslations) showActionFeedback(`Stories are not translated into ${name} yet. Showing English.`);
+  storiesRoot.querySelectorAll('.lead-story[data-story-id]').forEach((article) => {
+    const tr = storyTranslations && storyTranslations[article.dataset.storyId];
+    const title = article.querySelector('.story-title-button');
+    const deck = article.querySelector('.story-deck');
+    title.dataset.en = title.dataset.en || title.textContent;
+    if (deck) deck.dataset.en = deck.dataset.en || deck.textContent;
+    const headline = tr ? tr.headline : title.dataset.en;
+    title.textContent = headline;
+    title.setAttribute('aria-label', `Read full story: ${headline}`);
+    if (deck) deck.textContent = tr ? tr.summary : deck.dataset.en;
+  });
+  if (!articleOverlay.hidden) closeFullStory();
+}
+document.addEventListener('bought:language', (event) => applyStoryLanguage(event.detail.locale, event.detail.name, true));
+window.applyUiText();
+if (window.boughtLanguage && window.boughtLanguage.locale !== 'en') applyStoryLanguage(window.boughtLanguage.locale);

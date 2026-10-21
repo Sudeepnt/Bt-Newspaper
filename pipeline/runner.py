@@ -12,6 +12,7 @@ from .media import attach_media, build_media
 from .badges import assign_badges
 from .output import build_feed, write_feed
 from .podcast import attach_podcast, build_podcast
+from .translate import attach_translations, build_translations
 from .scoring import prefilter, select
 
 log = logging.getLogger(__name__)
@@ -59,6 +60,11 @@ def run_cycle(cfg, sources, dry_run=False, now=None, db_path=None, out_path=None
             cache = ROOT / "data" / ("podcast_dry_run" if dry_run else "podcast")
             podcast = build_podcast(cfg, feed, out_path.parent / "media", cache)
             attach_podcast(cfg, feed, out_path.parent / "media")
+        translations = None
+        if cfg.translate_languages:
+            cache = ROOT / "data" / ("translations_dry_run.json" if dry_run else "translations.json")
+            translations = build_translations(cfg, feed, out_path.parent / "media", cache)
+            attach_translations(cfg, feed, out_path.parent, cache)
         write_feed(feed, out_path)
     finally:
         fetcher.close()
@@ -67,4 +73,4 @@ def run_cycle(cfg, sources, dry_run=False, now=None, db_path=None, out_path=None
         log.info("ingest %-24s seen=%d new=%d skipped=%d%s", name, st["seen"], st["new"], st["skipped"],
                  f" ERROR {st['error']}" if st["error"] else "")
     return {"ingest": ingest_stats, "duplicates_rejected": dupes, "selection": sel,
-            "media": media, "podcast": podcast, "db": str(db_path), "feed": str(out_path)}
+            "media": media, "podcast": podcast, "translations": translations, "db": str(db_path), "feed": str(out_path)}

@@ -132,6 +132,20 @@ for (const [index, wave] of [...document.querySelectorAll('.waveform')].entries(
   wave.innerHTML = heights.map((height) => `<span style="--bar-height:${height}px"></span>`).join('');
 }
 
+async function applyHeadlineLanguage(locale) {
+  const tr = episode && locale !== 'en' ? await window.loadTranslations(locale) : null;
+  headlines.forEach((headline, index) => {
+    headline.original = headline.original || headline.title;
+    const chapter = episode && episode.chapters[index];
+    headline.title = tr && chapter && tr[chapter.id] ? tr[chapter.id].headline : headline.original;
+  });
+  renderHeadlines();
+  setPosition(position);
+  const note = document.querySelector('.lineup-kicker span:last-child');
+  note.textContent = locale === 'en' || !episode ? `${headlines.length} headlines` : `${headlines.length} · ${window.t('pod.audio')}`;
+}
+document.addEventListener('bought:language', (event) => applyHeadlineLanguage(event.detail.locale));
+
 renderHeadlines();
 if (episode) {                                            // real numbers instead of the sample's
   const minutes = Math.max(1, Math.round(duration / 60));
@@ -145,6 +159,8 @@ if (episode) {                                            // real numbers instea
   progress.max = Math.floor(duration);
 }
 setPosition(position);
+window.applyUiText();
+if (window.boughtLanguage && window.boughtLanguage.locale !== 'en') applyHeadlineLanguage(window.boughtLanguage.locale);
 
 function seekTo(seconds) {
   const target = Math.max(0, Math.min(duration, seconds));

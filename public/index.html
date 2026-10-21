@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#efece5">
   <title>Bought. — Today's issue</title>
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body>
   <main class="page">
@@ -33,7 +33,7 @@
         </button>
 
         <div class="language-menu" id="language-menu" role="dialog" aria-label="Choose newspaper language" hidden>
-          <div class="menu-heading">Read in your language</div>
+          <div class="menu-heading" data-i18n="menu.heading">Read in your language</div>
           <div class="language-options"></div>
         </div>
       </div>
@@ -49,13 +49,13 @@
           <rect x="6.5" y="7" width="4.5" height="5" />
           <path d="M14 7h4M14 10h4M6.5 15h11.5M6.5 18h11.5" />
         </svg>
-        <span>Newspaper</span>
+        <span data-i18n="nav.newspaper">Newspaper</span>
       </button>
       <a class="view-option" href="podcast.html" aria-label="Open podcast edition">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M3 10v4M7 7v10M11 3v18M15 8v8M19 5v14M23 10v4" />
         </svg>
-        <span>Podcast</span>
+        <span data-i18n="nav.podcast">Podcast</span>
       </a>
     </div>
 
@@ -64,7 +64,7 @@
     <section class="issue-completion" aria-label="Today's issue complete">
       <div class="completion-intro">
         <i class="completion-short-rule" aria-hidden="true"></i>
-        <p>Today's issue</p>
+        <p data-i18n="done.issue">Today's issue</p>
         <strong>50</strong>
       </div>
 
@@ -82,7 +82,7 @@
         <span class="completion-check" aria-hidden="true">
           <svg viewBox="0 0 24 24" focusable="false"><path d="m6 12 4 4 8-9" /></svg>
         </span>
-        <h2>You are up to date.</h2>
+        <h2 data-i18n="done.up">You are up to date.</h2>
       </div>
 
       <div class="completion-mountains">
@@ -97,7 +97,7 @@
         <div class="fog-ribbon fog-mid" aria-hidden="true"></div>
         <div class="fog-ribbon fog-near" aria-hidden="true"></div>
         <div class="mountain-fade" aria-hidden="true"></div>
-        <div class="completion-seal" aria-label="Daily issue complete"><i aria-hidden="true"></i><span>Daily issue complete</span><i aria-hidden="true"></i></div>
+        <div class="completion-seal" aria-label="Daily issue complete"><i aria-hidden="true"></i><span data-i18n="done.seal">Daily issue complete</span><i aria-hidden="true"></i></div>
       </div>
     </section>
   </main>
@@ -108,7 +108,7 @@
 
   <div class="action-feedback" id="action-feedback" role="status" aria-live="polite" hidden></div>
 
-  <script src="language.js"></script>
+  <script src="language.js?v=3"></script>
   <script>
     // Use the pipeline feed when it exists (prime stories with presenter video); otherwise the built-in samples.
     (async () => {
@@ -119,7 +119,7 @@
       for (const src of ['stories.js', 'completion.js']) {
         await new Promise((resolve) => {
           const el = document.createElement('script');
-          el.src = src + '?v=7'; el.onload = el.onerror = resolve;
+          el.src = src + '?v=10'; el.onload = el.onerror = resolve;
           document.body.append(el);
         });
       }

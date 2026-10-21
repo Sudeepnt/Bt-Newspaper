@@ -51,3 +51,8 @@ badges_new_hours: 3
 badges_min_events: 30               # a "most" badge needs at least this many views/reads/glances
 engagement_file: ""                 # JSON {article_id: {views, reads, glances}}
 
+
+# Translations for the page's language picker (offline; see translate_m2m.py: M2M100, MIT, `pip install transformers torch sentencepiece`).
+# Locales are the picker's. Stories/headlines are translated; video and podcast audio stay English.
+# translate_languages: [zh-CN, hi-IN, es-ES, ar, fr-FR, bn-BD, pt-BR, ru-RU, ja-JP]
+# translate_command: ["/path/to/venv/bin/python", "pipeline/translate_m2m.py", "{lang}"]

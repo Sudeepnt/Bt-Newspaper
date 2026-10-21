@@ -507,18 +507,18 @@ html.is-reading, html.is-reading body { overflow: hidden; }
 @media (min-width: 900px) {
   .page { max-width: 2200px; padding: 0 clamp(32px, 3.5vw, 80px); }   /* fills the window; only ultra-wide screens get margins */
 
-  .masthead { min-height: 92px; padding: 20px 0 12px; }
-  .wordmark { font-size: 56px; }
-  .issue-date { margin: 0 28px; }
+  .masthead { min-height: 54px; padding: 8px 0 6px; }
+  .wordmark { font-size: 38px; }
+  .issue-date { margin: 0 24px; }
   .issue-date::before, .issue-date::after { max-width: none; }
   .date-copy { margin: 0 16px; }
-  .weekday { font-size: 17px; }
-  .date-copy time { font-size: .875rem; }
-  .language-trigger { height: 40px; padding: 0 16px; gap: 8px; font-size: .875rem; }
+  .weekday { font-size: 15px; }
+  .date-copy time { font-size: .8125rem; }
+  .language-trigger { height: 34px; padding: 0 14px; gap: 7px; font-size: .8125rem; }
   .language-name { max-width: 140px; }
-  .newspaper-rules { height: 6px; margin: 0; border-top-width: 2px; }
-  .view-switch { width: 270px; margin: 18px auto 26px; }
-  .view-option { min-height: 36px; font-size: .8125rem; }
+  .newspaper-rules { height: 5px; margin: 0; border-top-width: 2px; }
+  .view-switch { width: 250px; margin: 10px auto 14px; }
+  .view-option { min-height: 30px; font-size: .8125rem; }
 
   /* The Prime: one big lead with two stories beside it, then rows of three */
   .prime-section { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 32px; padding-top: 0; }
@@ -657,4 +657,16 @@ html.is-reading, html.is-reading body { overflow: hidden; }
   .lead-story:hover .story-title-button, .glance-item:hover .story-title-button, .swipe-slide:hover .story-title-button {
     text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px;
   }
+}
+
+/* The wordmark keeps its letter order in right-to-left languages (otherwise its full stop jumps to the front) */
+.wordmark { direction: ltr; unicode-bidi: isolate; }
+
+/* A playing video that has scrolled away rides along under the top bar (small, top right, on desktop) */
+.pin-close { display: none; position: absolute; z-index: 5; top: 8px; right: 8px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: #000b; color: #fff; cursor: pointer; place-items: center; }
+.pin-close svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.video-poster.has-video.is-pinned .pin-close { display: grid; }
+.video-poster.has-video.is-pinned { position: fixed; z-index: 24; top: calc(var(--masthead-height) + 8px); right: auto; box-shadow: 0 10px 30px #0007; border-radius: 8px; }
+@media (min-width: 900px) {
+  .video-poster.has-video.is-pinned { left: auto; right: clamp(16px, 2.5vw, 48px); width: min(480px, 34vw); }
 }
