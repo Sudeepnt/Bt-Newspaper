@@ -48,6 +48,7 @@ class RangeHandler(SimpleHTTPRequestHandler):
 
     def end_headers(self):
         self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Cache-Control", "no-store")      # dev server: always show the latest CSS/JS/videos
         super().end_headers()
 
     def log_message(self, *a):
