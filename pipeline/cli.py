@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from . import db
 from .config import ConfigError, load_config, load_sources
 from .ingest import parse_iso
-from .runner import fixture_now, paths, run_cycle
+from .runner import ROOT, fixture_now, paths, run_cycle
 
 
 def _add_common(p):
@@ -33,6 +33,8 @@ def cmd_run(args) -> int:
         print(f"WARNING: {len(failed)} source(s) failed: {', '.join(failed)}")
     if result["media"]:
         print("audio: " + ", ".join(f"{k} {v}" for k, v in result["media"].items()))
+    if result.get("podcast"):
+        print("podcast: " + ", ".join(f"{k} {v}" for k, v in result["podcast"].items()))
     print(f"feed: {result['feed']}")
     return 0 if len(failed) < len(sources) else 1  # exit 1 only if every source failed
 
@@ -68,12 +70,31 @@ def cmd_clip(args) -> int:
     return 0
 
 
+def cmd_podcast(args) -> int:
+    """Build (or finish building) the podcast episode for the current feed.json, without a new ingest."""
+    import json
+    from .podcast import attach_podcast, build_podcast
+    cfg = load_config(args.config)
+    if not cfg.tts_command:
+        raise ConfigError("podcast needs tts_command")
+    feed_path = paths(args.dry_run)[1]
+    feed = json.loads(feed_path.read_text())
+    cache = ROOT / "data" / ("podcast_dry_run" if args.dry_run else "podcast")
+    res = build_podcast(cfg, feed, feed_path.parent / "media", cache)
+    attached = attach_podcast(cfg, feed, feed_path.parent / "media")
+    if attached:
+        feed_path.write_text(json.dumps(feed, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print("podcast: " + ", ".join(f"{k} {v}" for k, v in res.items()) + (" -> attached to feed" if attached else ""))
+    return 0 if res["complete"] else 1
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="python -m pipeline", description=__doc__)
     parser.add_argument("-v", "--verbose", action="store_true")
     sub = parser.add_subparsers(dest="cmd", required=True)
     _add_common(sub.add_parser("run", help="one full cycle"))
     _add_common(sub.add_parser("show", help="print the current selection"))
+    _add_common(sub.add_parser("podcast", help="narrate every story into one episode (uses the existing feed.json)"))
     pc = sub.add_parser("clip", help="render a produced clip from a spec file (see pipeline/clips/)")
     pc.add_argument("spec")
     _add_common(pc)
@@ -81,7 +102,7 @@ def main(argv=None) -> int:
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING,
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     try:
-        return {"run": cmd_run, "show": cmd_show, "clip": cmd_clip}[args.cmd](args)
+        return {"run": cmd_run, "show": cmd_show, "clip": cmd_clip, "podcast": cmd_podcast}[args.cmd](args)
     except ConfigError as e:
         print(f"config error: {e}", file=sys.stderr)
         return 2

@@ -10,6 +10,7 @@ from .dedupe import dedupe
 from .ingest import FixtureFetcher, LiveFetcher, ingest_all, iso
 from .media import attach_media, build_media
 from .output import build_feed, write_feed
+from .podcast import attach_podcast, build_podcast
 from .scoring import prefilter, select
 
 log = logging.getLogger(__name__)
@@ -50,6 +51,11 @@ def run_cycle(cfg, sources, dry_run=False, now=None, db_path=None, out_path=None
         if cfg.media_enabled:
             media = build_media(conn, cfg, feed, out_path.parent / "media", iso(now), fetch_images=not dry_run)
             attach_media(conn, cfg, feed)
+        podcast = None
+        if cfg.podcast_enabled:
+            cache = ROOT / "data" / ("podcast_dry_run" if dry_run else "podcast")
+            podcast = build_podcast(cfg, feed, out_path.parent / "media", cache)
+            attach_podcast(cfg, feed, out_path.parent / "media")
         write_feed(feed, out_path)
     finally:
         fetcher.close()
@@ -58,4 +64,4 @@ def run_cycle(cfg, sources, dry_run=False, now=None, db_path=None, out_path=None
         log.info("ingest %-24s seen=%d new=%d skipped=%d%s", name, st["seen"], st["new"], st["skipped"],
                  f" ERROR {st['error']}" if st["error"] else "")
     return {"ingest": ingest_stats, "duplicates_rejected": dupes, "selection": sel,
-            "media": media, "db": str(db_path), "feed": str(out_path)}
+            "media": media, "podcast": podcast, "db": str(db_path), "feed": str(out_path)}

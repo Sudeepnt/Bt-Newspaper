@@ -59,3 +59,12 @@ Queue only the 25 prime stories, newest first, with a per-run time budget so a 3
 `studio` (default), `channel` (TV news set: LIVE tag, headline + sub-line, UP NEXT, ticker) or `funky` (sticker look).
 Kokoro setup for the voice: install `kokoro-onnx` + `soundfile` in a Python >= 3.10 venv, download `kokoro.onnx` and
 `voices.bin`, and point `tts_command` at `tts_kokoro.py` (not yet in the README).
+
+## 7. The daily podcast
+`podcast_enabled: true` (needs `tts_command`) makes `run` also narrate the issue: `python -m pipeline podcast` does the same
+for the current feed.json. Every story (prime, then cards: 50) is read as "Story N. Now, <category>. <headline>. <summary>.
+From <source>." with an intro and outro, one TTS call each, cached per script. When all pieces exist they are joined with
+0.7 s gaps into `media/podcast.mp3` (mono 80 kbps) and `media/podcast.json`; the feed gets `podcast.{audio_url,duration_s,chapters}`.
+`podcast.html` plays it (nothing downloads until Play) and each headline seeks to its chapter. Measured on a Mac with Kokoro:
+52 pieces in ~5 min, 15.5 min of audio, 9 MB. A story that changes is the only one re-read.
+

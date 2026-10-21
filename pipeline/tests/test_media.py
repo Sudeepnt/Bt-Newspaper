@@ -107,3 +107,31 @@ def test_mascot_presenter_renders_all_moods():
         assert im.mode == "RGBA" and im.getchannel("A").getbbox()
         sizes.add(im.size)
     assert len(sizes) == 1
+
+
+@needs_ffmpeg
+def test_podcast_builds_one_episode_with_chapters_and_is_idempotent(tmp_path):
+    from pipeline.podcast import attach_podcast, build_podcast, story_script
+    marker = tmp_path / "calls.txt"
+    stub = ("import sys,wave;sys.stdin.read();open(%r,'a').write('x');w=wave.open(sys.argv[1],'wb');w.setnchannels(1);"
+            "w.setsampwidth(2);w.setframerate(16000);w.writeframes(b'\\0\\0'*16000);w.close()" % str(marker))
+    cfg = replace(load_config(), media_enabled=True, podcast_enabled=True, podcast_stories=3, podcast_gap_seconds=0.5,
+                  tts_command=(sys.executable, "-c", stub, "{wav}"), audio_base_url="/media")
+    feed = {"generated_at": "2026-10-13T04:00:00Z",
+            "prime": [{"id": f"s{i}", "headline": f"Headline {i}", "summary": "A summary.", "source": "Wire",
+                       "category": "AI" if i < 2 else "Business"} for i in range(5)], "cards": [], "glance": []}
+    out, cache = tmp_path / "media", tmp_path / "cache"
+    res = build_podcast(cfg, feed, out, cache)
+    assert res["complete"] and res["built"] and res["new"] == 5          # intro + 3 stories + outro
+    assert attach_podcast(cfg, feed, out)
+    ch = feed["podcast"]["chapters"]
+    assert [c["id"] for c in ch] == ["s0", "s1", "s2"]
+    assert ch[0]["start"] == 1.5 and ch[1]["start"] == pytest.approx(ch[0]["end"] + 0.5)   # 1 s intro + 0.5 s gap, then each story + gap
+    assert feed["podcast"]["duration_s"] == pytest.approx(5 * 1.0 + 4 * 0.5)
+    res2 = build_podcast(cfg, feed, out, cache)                          # nothing changed: no TTS calls, no rebuild
+    assert res2["new"] == 0 and not res2["built"] and marker.read_text() == "x" * 5
+    feed["prime"][1]["headline"] = "Changed"                             # one story changes: only it is re-read
+    assert not attach_podcast(cfg, {**feed, "podcast": None}, out)       # stale episode is not attached
+    res3 = build_podcast(cfg, feed, out, cache)
+    assert res3["new"] == 1 and res3["built"]
+    assert story_script({"id": "x", "headline": "Hi", "summary": "S", "category": "AI"}, 2, "AI").startswith("Story 2. Next.")

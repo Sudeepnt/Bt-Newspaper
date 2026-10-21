@@ -51,6 +51,12 @@ class Config:
     media_time_budget_seconds: float = 900     # keeps a 30-min cron from overlapping itself
     media_max_attempts: int = 3
     script_max_chars: int = 600
+    # The daily podcast: every story in one narrated episode (needs media_enabled for the TTS engine).
+    podcast_enabled: bool = False
+    podcast_stories: int = 50
+    podcast_speed: float = 1.0
+    podcast_gap_seconds: float = 0.7
+    podcast_time_budget_seconds: float = 1500
     # Phase 2b: presenter video (needs media_enabled). Paths are relative to the project root.
     avatar_enabled: bool = False
     avatar_image: str = "pipeline/assets/presenter_cutout.png"   # transparent PNG, 1280x720 design space
@@ -97,6 +103,8 @@ def load_config(path=None) -> Config:
         raise ConfigError("category_cap must be in (0, 1]")
     if cfg.avatar_enabled and not cfg.media_enabled:
         raise ConfigError("avatar_enabled needs media_enabled (the video is driven by the audio)")
+    if cfg.podcast_enabled and not cfg.tts_command:
+        raise ConfigError("podcast_enabled needs tts_command")
     if cfg.media_enabled and not cfg.tts_command:
         raise ConfigError("media_enabled needs tts_command")
     return cfg
