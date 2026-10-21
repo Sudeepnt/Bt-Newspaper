@@ -1,0 +1,30 @@
+# Trusted sources. Replace these placeholders with the real list.
+#   type:     rss | sitemap   (sitemap = Google News sitemap with <news:news> entries)
+#   weight:   1-5 (5 = most trusted; feeds score and wins duplicates)
+#   category: shown in the app; selection keeps any one category <= 40% of a slot
+sources:
+  - name: Placeholder Technology
+    type: rss
+    url: https://example.com/feeds/technology.xml
+    weight: 5
+    category: Technology
+  - name: Placeholder AI
+    type: rss
+    url: https://example.com/feeds/ai.xml
+    weight: 4
+    category: AI
+  - name: Placeholder Business
+    type: rss
+    url: https://example.com/feeds/business.xml
+    weight: 4
+    category: Tech business
+  - name: Placeholder Founders
+    type: rss
+    url: https://example.com/feeds/founders.xml
+    weight: 3
+    category: Founders & startups
+  - name: Placeholder Launches
+    type: rss
+    url: https://example.com/feeds/launches.xml
+    weight: 2
+    category: Product launches

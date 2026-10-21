@@ -85,3 +85,12 @@ Run: `npm ci && cp .env.example .env && npm run dev`. Scripts: `build`, `test` (
 - Bought's CSP (`vercel.json`) is strict (`default-src 'self'`) — remote images/fonts need allowlisting.
 - Language picker and podcast audio in the prototype are placeholders; Bought already has Mux captions/translation infra and a language list (`lib/caption-languages.ts`) that could be reused.
 - `Bought/` is a nested git repo inside the Bt-Newspaper repo working tree; don't `git add` it from the parent.
+
+---
+
+## 3. `pipeline/` (added 2026-10-20) — newspaper content pipeline, Phase 1
+Standalone Python service (own venv, `pipeline/README.md` has everything): RSS/news-sitemap sources
+(`sources.yaml`) -> SQLite (`data/news.db`) -> dedupe -> score/select -> `out/feed.json` {prime, cards, glance}.
+Settings in `pipeline/config.yaml` (slots 25/25/10 unconfirmed). `python -m pipeline run|show [--dry-run]`,
+tests `pytest pipeline`. Phase 2 (TTS/avatar) is only planned in `pipeline/PHASE2.md`. Licenses: `pipeline/LICENSES.md`.
+Run commands from the project root.

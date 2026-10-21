@@ -1,0 +1,19 @@
+# Pipeline settings. Slot sizes are NOT confirmed product numbers: change them here.
+user_agent: "BoughtNewsBot/0.1 (+https://github.com/Sudeepnt/Bt-Newspaper; contact: set-a-real-email@example.com)"
+http_timeout_seconds: 15
+fetch_attempts: 3
+max_items_per_source: 60
+
+max_age_hours: 48          # older items are never stored / become 'expired'
+filtered_size: 50          # top-N candidates all slots draw from
+slots:
+  prime: 25
+  cards: 25
+  glance: 10
+category_cap: 0.4          # max share of a single category in each slot
+category_balance_max_bonus: 2.0   # bonus (0..N) for categories under their even share
+dedupe_jaccard: 0.7
+
+og_fallback: true          # fetch og:image from the article page when the feed has none
+og_min_interval_seconds: 1.5      # per-host politeness delay
+og_max_per_source: 15      # article-page fetches per source per run
