@@ -498,3 +498,6 @@ html.is-reading, html.is-reading body { overflow: hidden; }
 
 .story-source { margin: 10px 0 0; font: 400 .8rem/1.4 'DM Sans', Arial, sans-serif; color: #5c574d; }
 .story-source a { color: inherit; }
+
+.video-poster.has-video { aspect-ratio: 16 / 9; }
+.video-poster.has-video::after { display: none; }

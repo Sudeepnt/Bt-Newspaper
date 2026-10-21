@@ -45,7 +45,11 @@ def script_hash(script: str) -> str:
 
 
 def _run(cmd, **kw):
-    return subprocess.run(cmd, capture_output=True, check=True, timeout=kw.pop("timeout", 120), **kw)
+    try:
+        return subprocess.run(cmd, capture_output=True, check=True, timeout=kw.pop("timeout", 120), **kw)
+    except subprocess.CalledProcessError as e:  # surface the tool's own message, not just the command line
+        raise RuntimeError(f"{Path(cmd[0]).name} exited {e.returncode}: "
+                           f"{(e.stderr or b'').decode(errors='replace').strip()[-200:]}") from None
 
 
 def synthesize(script: str, out_mp3: Path, cfg) -> float:
@@ -65,7 +69,7 @@ def synthesize(script: str, out_mp3: Path, cfg) -> float:
         tmp.unlink(missing_ok=True)
 
 
-def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize) -> dict:
+def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize, fetch_images=True) -> dict:
     """Make audio for each prime item that lacks it. Safe to rerun; stops at the time budget."""
     conn.executescript(ASSETS_SCHEMA)
     out_dir = Path(out_dir)
@@ -79,7 +83,7 @@ def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize) 
         if row and row["status"] == "ok" and row["script_hash"] == script_hash(script) and path.exists():
             stats["skipped"] += 1
             if cfg.avatar_enabled:
-                _video(conn, cfg, item, path, out_dir, now_iso, video_cache)
+                _video(conn, cfg, item, path, out_dir, now_iso, video_cache, fetch_images)
             continue
         same_script = row and row["script_hash"] == script_hash(script)
         if row and row["status"] == "failed" and same_script and row["attempts"] >= cfg.media_max_attempts:
@@ -104,15 +108,15 @@ def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize) 
                 (item["id"], "audio", path.name, script_hash(script), duration, status, attempts, err, now_iso))
         stats["made" if status == "ok" else "failed"] += 1
         if status == "ok" and cfg.avatar_enabled:
-            _video(conn, cfg, item, path, out_dir, now_iso, video_cache)
+            _video(conn, cfg, item, path, out_dir, now_iso, video_cache, fetch_images)
     return stats
 
 
-def _video(conn, cfg, item, audio, out_dir, now_iso, cache) -> None:
+def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True) -> None:
     """Presenter video for one story; same skip/retry rules as audio, keyed on the script hash."""
     from . import avatar  # Pillow/numpy only needed when avatar_enabled
-    image = Path(cfg.avatar_image)
-    image = image if image.is_absolute() else Path(__file__).resolve().parent.parent / image
+    root = Path(__file__).resolve().parent.parent
+    resolve = lambda p: Path(p) if Path(p).is_absolute() else root / p
     h = script_hash(item["script"])
     path = out_dir / f"{item['id']}.mp4"
     row = conn.execute("SELECT * FROM assets WHERE article_id=? AND kind='video'", (item["id"],)).fetchone()
@@ -123,8 +127,10 @@ def _video(conn, cfg, item, audio, out_dir, now_iso, cache) -> None:
         return
     try:
         if not cache:
-            cache.extend(avatar.frames_for(image, cfg.avatar_size))
-        avatar.render_video(audio, path, image, cfg.avatar_size, cache)
+            cache.append(avatar.Presenter(resolve(cfg.avatar_image), tuple(cfg.avatar_size)))
+        shot = _monitor_image(item, cfg, out_dir, resolve, fetch_images)
+        avatar.render_video(audio, path, cache[0], item["headline"], shot, item.get("image_credit") or "",
+                            cfg.avatar_channel, resolve(cfg.avatar_font), seed=item["id"])
         status, err = "ok", None
     except Exception as e:
         status, err = "failed", f"{type(e).__name__}: {e}"[:300]
@@ -153,3 +159,24 @@ def attach_media(conn, cfg, feed: dict) -> None:
         vok = v and v["script_hash"] == script_hash(item["script"])
         if cfg.avatar_enabled:
             item["video_url"] = f"{base}/{v['path']}" if vok else None
+
+
+def _monitor_image(item, cfg, out_dir, resolve, fetch):
+    """The story image for the on-screen monitor: downloaded once, or a local fallback if that fails."""
+    from PIL import Image
+    cached = Path(out_dir) / "images" / f"{item['id']}.img"
+    if fetch and item.get("image_url"):
+        try:
+            if not cached.exists():
+                import httpx
+                r = httpx.get(item["image_url"], timeout=cfg.http_timeout_seconds, follow_redirects=True,
+                              headers={"User-Agent": cfg.user_agent})
+                r.raise_for_status()
+                cached.parent.mkdir(parents=True, exist_ok=True)
+                cached.write_bytes(r.content)
+            return Image.open(cached).convert("RGB")
+        except Exception as e:
+            cached.unlink(missing_ok=True)
+            log.info("monitor image for %s unavailable (%s); using fallback", item["id"], type(e).__name__)
+    fallbacks = cfg.avatar_fallback_images
+    return Image.open(resolve(fallbacks[int(item["id"], 16) % len(fallbacks)])).convert("RGB")

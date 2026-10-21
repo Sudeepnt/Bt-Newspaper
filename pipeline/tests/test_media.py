@@ -69,7 +69,7 @@ def test_media_requires_command(tmp_path):
 def test_avatar_video_made_and_in_feed(tmp_path):
     pytest.importorskip("PIL")
     cfg = replace(cfg_with([sys.executable, "-c", STUB, "{wav}"]), avatar_enabled=True,
-                  avatar_size=(220, 100))
+                  avatar_size=(320, 180))
     res, feed, out = go(tmp_path, cfg)
     assert res["media"]["failed"] == 0
     assert all(i["video_url"].endswith(".mp4") for i in feed["prime"])

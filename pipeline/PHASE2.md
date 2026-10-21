@@ -4,7 +4,8 @@
 - **2a script + audio: built and tested** (`media.py`). Every prime item gets a `script`, and once audio exists,
   `audio_url` and `duration_s`. Verified end to end with Piper (`en_US-lessac-medium`): 25 stories in ~28 s on a
   laptop (about 1 s per story); not yet timed on the 2 vCPU VPS.
-- **2b avatar video: built as the cheap option 1** (`avatar.py`, `avatar_enabled`). The presenter photo
+- **Voice:** Kokoro (`tts_kokoro.py`) sounds far more natural than Piper; use it as `tts_command`.
+- **2b avatar video: built as the cheap option 1, now a 16:9 news frame** (presenter, zooming story monitor, headline bar, badge) (`avatar.py`, `avatar_enabled`). The presenter photo
   (`public/assets/ai-presenter.jpg`) gets a 2D mouth-flap driven by speech loudness, muxed with the audio into an
   MP4 (1100x500, H.264/AAC). ~0.5 s per story on CPU. It is stylised, **not true lip-sync**; real lip-sync
   (Wav2Lip etc.) still needs a GPU and a licence check. Demo page: `public/live.html`.

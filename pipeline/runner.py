@@ -48,7 +48,7 @@ def run_cycle(cfg, sources, dry_run=False, now=None, db_path=None, out_path=None
         feed = build_feed(conn, cfg, iso(now))
         media = None
         if cfg.media_enabled:
-            media = build_media(conn, cfg, feed, out_path.parent / "media", iso(now))
+            media = build_media(conn, cfg, feed, out_path.parent / "media", iso(now), fetch_images=not dry_run)
             attach_media(conn, cfg, feed)
         write_feed(feed, out_path)
     finally:

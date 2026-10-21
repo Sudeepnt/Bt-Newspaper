@@ -53,8 +53,13 @@ class Config:
     script_max_chars: int = 600
     # Phase 2b: presenter video (needs media_enabled). Paths are relative to the project root.
     avatar_enabled: bool = False
-    avatar_image: str = "public/assets/ai-presenter.jpg"
-    avatar_size: tuple = (1100, 500)           # matches the newspaper's 2.2:1 video slot
+    avatar_image: str = "pipeline/assets/presenter_cutout.png"   # transparent PNG, 1280x720 design space
+    avatar_size: tuple = (960, 540)            # 16:9 news frame
+    avatar_font: str = "public/assets/font-0.ttf"
+    avatar_channel: str = "BOUGHT."
+    avatar_fallback_images: tuple = ("public/assets/swipe-data-center.jpg", "public/assets/swipe-robotics.jpg",
+                                     "public/assets/swipe-founders.jpg", "public/assets/swipe-battery.jpg",
+                                     "public/assets/swipe-rocket.jpg")
 
 
 def load_config(path=None) -> Config:
@@ -65,6 +70,8 @@ def load_config(path=None) -> Config:
         raise ConfigError(f"unknown config keys: {sorted(unknown)}")
     if isinstance(raw.get("tts_command"), list):
         raw["tts_command"] = tuple(map(str, raw["tts_command"]))
+    if isinstance(raw.get("avatar_fallback_images"), list):
+        raw["avatar_fallback_images"] = tuple(raw["avatar_fallback_images"])
     if isinstance(raw.get("avatar_size"), list):
         raw["avatar_size"] = tuple(raw["avatar_size"])
     cfg = Config(**raw)

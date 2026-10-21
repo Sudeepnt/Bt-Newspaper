@@ -394,7 +394,7 @@ function renderStory(story, number, saveKey = number) {
   const loading = number === 1 ? 'eager' : 'lazy';
   return `
     <article class="lead-story" id="story-${number}" aria-labelledby="story-title-${number}" data-story-number="${number}" data-save-key="${saveKey}">
-      <div class="video-poster">
+      <div class="video-poster${story.video ? ' has-video' : ''}">
         ${story.video
           ? `<video class="hero-image" src="${escapeStoryText(story.video)}" controls playsinline preload="metadata" aria-label="AI journalist presenting: ${escapeStoryText(story.title)}"></video>`
           : `<img class="hero-image" src="${story.image}" alt="${escapeStoryText(story.imageAlt)}" style="object-position: ${escapeStoryText(story.imagePosition)}" loading="${loading}">`}
