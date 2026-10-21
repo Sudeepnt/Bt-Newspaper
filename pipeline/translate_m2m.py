@@ -1,7 +1,9 @@
 """Translation adapter for translate_command: M2M100 (Meta, MIT licence), English -> one language, fully offline.
 
-Usage: translate_m2m.py <m2m language code>      stdin: a JSON list of English strings, stdout: a JSON list of translations.
-Needs `pip install transformers torch sentencepiece` (Python >= 3.9); the ~1.9 GB model downloads from Hugging Face once.
+Usage: translate_m2m.py <m2m language code> [model dir]   stdin: a JSON list of English strings, stdout: a JSON list.
+Needs `pip install transformers torch sentencepiece` (Python >= 3.9). The ~1.9 GB model comes from Hugging Face; if that is
+slow, `python pipeline/fetch_hf.py facebook/m2m100_418M /some/dir` downloads it with parallel connections, and the optional
+second argument points the translator at that folder.
 """
 import json
 import sys
@@ -9,13 +11,13 @@ import sys
 MODEL = "facebook/m2m100_418M"
 
 
-def main(lang: str) -> None:
+def main(lang: str, model: str = MODEL) -> None:
     import torch
     from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
     texts = json.load(sys.stdin)
     device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
-    tok = M2M100Tokenizer.from_pretrained(MODEL)
-    model = M2M100ForConditionalGeneration.from_pretrained(MODEL).to(device).eval()
+    tok = M2M100Tokenizer.from_pretrained(model)
+    model = M2M100ForConditionalGeneration.from_pretrained(model).to(device).eval()
     tok.src_lang = "en"
     out = []
     for i in range(0, len(texts), 8):
@@ -27,4 +29,4 @@ def main(lang: str) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else MODEL)
