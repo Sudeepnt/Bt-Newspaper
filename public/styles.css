@@ -600,3 +600,10 @@ html.is-reading, html.is-reading body { overflow: hidden; }
 .seek-flash[data-side='fwd'] { right: 12%; }
 .seek-flash.is-on { animation: seek-flash .6s ease-out; }
 @keyframes seek-flash { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+.countdown-num { position: absolute; inset: 0; display: none; place-items: center; color: #fff; font: 700 1.75rem/1 'DM Sans', Arial, sans-serif; font-variant-numeric: tabular-nums; }
+.countdown-label { display: none; margin-top: 12px; padding: 5px 10px; border-radius: 999px; background: #000b; color: #fff; white-space: nowrap; font: 600 .75rem/1.2 'DM Sans', Arial, sans-serif; }
+.is-counting .microphone-circle > svg:not(.countdown-ring) { display: none; }
+.is-counting .countdown-num { display: grid; }
+.is-counting .countdown-label { display: block; }
+.is-counting .microphone-circle { cursor: pointer; background: #091b26b0; }
+.microphone-circle .countdown-ring { stroke-width: 4; }

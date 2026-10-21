@@ -400,7 +400,8 @@ function renderStory(story, number, saveKey = number) {
           : `<img class="hero-image" src="${story.image}" alt="${escapeStoryText(story.imageAlt)}" style="object-position: ${escapeStoryText(story.imagePosition)}" loading="${loading}">`}
         <span class="video-story-number" aria-label="Story ${number} of 50">${number} / 50</span>
         ${story.video ? `<button class="play-news" type="button" aria-label="Play the news: ${escapeStoryText(story.title)}">
-          <span class="microphone-circle">${microphoneIcon}<svg class="countdown-ring" viewBox="0 0 70 70" aria-hidden="true" focusable="false"><circle cx="35" cy="35" r="32" /></svg></span>
+          <span class="microphone-circle">${microphoneIcon}<b class="countdown-num" aria-hidden="true"></b><svg class="countdown-ring" viewBox="0 0 70 70" aria-hidden="true" focusable="false"><circle cx="35" cy="35" r="32" /></svg></span>
+          <span class="countdown-label" aria-live="polite"></span>
         </button>
         <span class="seek-flash" aria-hidden="true"></span>
         <span class="video-progress" aria-hidden="true"><i></i></span>` : `<button class="play-news" type="button" aria-label="Play AI journalist news preview">
@@ -786,12 +787,14 @@ storiesRoot.addEventListener('click', (event) => {
 (() => {
   const SEEK = 5, COUNTDOWN_MS = 3000;
   const posters = () => [...storiesRoot.querySelectorAll('.video-poster.has-video')];
-  let countdown = null;                                   // { poster, timer }
+  let countdown = null;                                   // { poster, timer, tick }
 
   function cancelCountdown() {
     if (!countdown) return;
     clearTimeout(countdown.timer);
+    clearInterval(countdown.tick);
     countdown.poster.classList.remove('is-counting');
+    countdown.poster.querySelector('.countdown-label').textContent = '';
     countdown = null;
   }
 
@@ -816,7 +819,10 @@ storiesRoot.addEventListener('click', (event) => {
     const poster = event.target.closest('.video-poster.has-video');
     if (!poster) return;
     const video = poster.querySelector('video');
-    if (poster.classList.contains('is-counting')) { cancelCountdown(); return; }   // tap the counting button = stay here
+    if (poster.classList.contains('is-counting')) {            // only a tap inside the circle stops the auto-advance
+      if (event.target.closest('.microphone-circle')) cancelCountdown();
+      return;
+    }
     const box = poster.getBoundingClientRect();
     const x = (event.clientX - box.left) / box.width;
     const onButton = event.target.closest('.play-news');
@@ -857,12 +863,17 @@ storiesRoot.addEventListener('click', (event) => {
       const all = posters();
       const next = all[all.indexOf(poster) + 1];
       if (!next) return;                                  // last video: stay on it with the mic button to replay
+      const num = poster.querySelector('.countdown-num');
+      const label = poster.querySelector('.countdown-label');
+      let left = COUNTDOWN_MS / 1000;
+      const show = () => { num.textContent = left; label.textContent = `Next story in ${left}s · tap the circle to stay`; };
+      show();
       poster.classList.add('is-counting');
       countdown = {
         poster,
+        tick: setInterval(() => { left = Math.max(1, left - 1); show(); }, 1000),
         timer: setTimeout(() => {
-          poster.classList.remove('is-counting');
-          countdown = null;
+          cancelCountdown();
           next.scrollIntoView({ behavior: 'smooth', block: 'center' });
           playPoster(next);
         }, COUNTDOWN_MS),
