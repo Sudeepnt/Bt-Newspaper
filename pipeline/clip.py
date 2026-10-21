@@ -136,13 +136,16 @@ def make_clip(spec_path, cfg, dry_run=True, feed_path=None) -> dict:
         render_styled(style, mp3, mp4, presenter, spec["headline"], shot, spec.get("credit", ""), cfg.avatar_channel,
                       _resolve(cfg.avatar_font), seed=name, moods=moods, cut_ranges=cuts, category=spec.get("category", ""), subhead=spec.get("subhead", ""),
                       ticker=spec.get("ticker") or _ticker(feed_path, spec), captions=caps, laughs=laughs)
+    from .avatar import extract_poster
+    mp4.with_suffix(".jpg").unlink(missing_ok=True)                  # the video was just re-rendered: refresh its still
+    extract_poster(mp4)
     attached = None
     if spec.get("attach_to") and feed_path.exists():                 # point that feed item at this clip (demo plumbing)
         feed = json.loads(feed_path.read_text())
         for item in feed["prime"]:
             if item["id"] == spec["attach_to"]:
                 base = cfg.audio_base_url.rstrip("/")
-                item.update(script=script, audio_url=f"{base}/{mp3.name}", video_url=f"{base}/{mp4.name}",
+                item.update(script=script, audio_url=f"{base}/{mp3.name}", video_url=f"{base}/{mp4.name}", poster_url=f"{base}/{mp4.with_suffix('.jpg').name}",
                             duration_s=round(duration, 2))
                 attached = item["id"]
         feed_path.write_text(json.dumps(feed, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

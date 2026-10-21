@@ -384,6 +384,7 @@ if (window.liveFeed && window.liveFeed.prime && window.liveFeed.prime.length) {
     imageAlt: '',
     imagePosition: 'center 42%',
     video: item.video_url || '',
+    poster: item.poster_url || '',
     audio: item.audio_url || '',
     source: item.source,
     link: item.link,
@@ -396,7 +397,7 @@ function renderStory(story, number, saveKey = number) {
     <article class="lead-story" id="story-${number}" aria-labelledby="story-title-${number}" data-story-number="${number}" data-save-key="${saveKey}">
       <div class="video-poster${story.video ? ' has-video' : ''}">
         ${story.video
-          ? `<video class="hero-image" src="${escapeStoryText(story.video)}#t=0.1" playsinline preload="metadata" disablepictureinpicture disableremoteplayback aria-label="AI journalist presenting: ${escapeStoryText(story.title)}"></video>`
+          ? `<video class="hero-image" src="${escapeStoryText(story.video)}" ${story.poster ? `poster="${escapeStoryText(story.poster)}" preload="none"` : 'preload="metadata"'} playsinline disablepictureinpicture disableremoteplayback aria-label="AI journalist presenting: ${escapeStoryText(story.title)}"></video>`
           : `<img class="hero-image" src="${story.image}" alt="${escapeStoryText(story.imageAlt)}" style="object-position: ${escapeStoryText(story.imagePosition)}" loading="${loading}">`}
         <span class="video-story-number" aria-label="Story ${number} of 50">${number} / 50</span>
         ${story.video ? `<button class="play-news" type="button" aria-label="Play the news: ${escapeStoryText(story.title)}">
@@ -869,6 +870,7 @@ storiesRoot.addEventListener('click', (event) => {
       const show = () => { num.textContent = left; label.textContent = `Next story in ${left}s · tap the circle to stay`; };
       show();
       poster.classList.add('is-counting');
+      next.querySelector('video').preload = 'auto';          // only now start fetching the next video, so it is ready at zero
       countdown = {
         poster,
         tick: setInterval(() => { left = Math.max(1, left - 1); show(); }, 1000),

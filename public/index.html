@@ -119,7 +119,7 @@
       for (const src of ['stories.js', 'completion.js']) {
         await new Promise((resolve) => {
           const el = document.createElement('script');
-          el.src = src + '?v=3'; el.onload = el.onerror = resolve;
+          el.src = src + '?v=4'; el.onload = el.onerror = resolve;
           document.body.append(el);
         });
       }

@@ -122,6 +122,7 @@ def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True) -
     row = conn.execute("SELECT * FROM assets WHERE article_id=? AND kind='video'", (item["id"],)).fetchone()
     same = row and row["script_hash"] == h
     if same and row["status"] == "ok" and path.exists():
+        avatar.extract_poster(path)                     # videos rendered before posters existed get theirs now
         return
     if same and row["status"] == "failed" and row["attempts"] >= cfg.media_max_attempts:
         return
@@ -132,6 +133,7 @@ def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True) -
         avatar.render_video(audio, path, cache[0], item["headline"], shot, item.get("image_credit") or "",
                             cfg.avatar_channel, resolve(cfg.avatar_font), seed=item["id"],
                             cutaway_chance=cfg.avatar_cutaway_chance)
+        avatar.extract_poster(path)
         status, err = "ok", None
     except Exception as e:
         status, err = "failed", f"{type(e).__name__}: {e}"[:300]
@@ -160,6 +162,7 @@ def attach_media(conn, cfg, feed: dict) -> None:
         vok = v and v["script_hash"] == script_hash(item["script"])
         if cfg.avatar_enabled:
             item["video_url"] = f"{base}/{v['path']}" if vok else None
+            item["poster_url"] = f"{base}/{Path(v['path']).with_suffix('.jpg').name}" if vok else None
 
 
 def _monitor_image(item, cfg, out_dir, resolve, fetch):

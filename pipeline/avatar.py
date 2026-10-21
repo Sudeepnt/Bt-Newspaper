@@ -330,6 +330,21 @@ def _lerp_box(a, b, t):
     return tuple(a[i] + (b[i] - a[i]) * t for i in range(4))
 
 
+def extract_poster(mp4, jpg=None) -> Path:
+    """One still frame of the finished video (a second or so in, when the headline is on screen). The page shows this
+    instead of loading the video, so nothing is downloaded until someone presses play. Skips if it already exists."""
+    mp4 = Path(mp4)
+    jpg = Path(jpg) if jpg else mp4.with_suffix(".jpg")
+    if jpg.exists():
+        return jpg
+    tmp = jpg.with_suffix(".jpg.tmp")
+    cmd = ["ffmpeg", "-y", "-loglevel", "error", "-ss", "1.6", "-i", str(mp4), "-frames:v", "1", "-q:v", "3",
+           "-f", "image2", str(tmp)]
+    subprocess.run(cmd, check=True, timeout=60)
+    os.replace(tmp, jpg)
+    return jpg
+
+
 def render_video(audio_path, out_mp4, presenter: Presenter, headline, monitor_image, credit="", channel="BOUGHT.",
                  font_path=None, seed="", cutaway_chance=0.6, moods=None, cut_ranges=None) -> None:
     out_mp4 = Path(out_mp4)
