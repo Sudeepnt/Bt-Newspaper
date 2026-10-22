@@ -301,6 +301,43 @@ def overlay_layer(size, headline, channel, font_path) -> Image.Image:
     return layer
 
 
+STRAP_POS = {"studio": (40, 528), "channel": (42, 478), "funky": (40, 528)}   # design px, under the presenter
+
+
+def name_strap(size, journalist, font_path) -> Image.Image | None:
+    """The journalist's name strap (red edge, navy plate, NAME + small tag). None when no name is configured."""
+    name, tag = journalist or ("", "")
+    if not name:
+        return None
+    s = size[0] / DESIGN[0]
+    nf, tf = _font(font_path, int(26 * s)), _font(font_path, int(14 * s))
+    ruler = ImageDraw.Draw(Image.new("RGBA", (8, 8)))
+    name = name.upper()
+    nw, tw = ruler.textlength(name, font=nf), ruler.textlength(tag, font=tf) if tag else 0
+    w, h = int(nw + tw + (52 if tag else 40) * s), int(38 * s)
+    layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    d.rectangle((0, 0, w, h), fill=(10, 28, 70, 238))
+    d.rectangle((0, 0, int(7 * s), h), fill=(225, 30, 45, 255))
+    d.rectangle((0, h - max(2, int(2 * s)), w, h), fill=(120, 150, 210, 255))
+    d.text((int(20 * s), int(5 * s)), name, font=nf, fill=(255, 255, 255, 255), stroke_width=max(1, int(0.8 * s)),
+           stroke_fill=(255, 255, 255, 255))
+    if tag:
+        d.text((int(32 * s + nw), int(13 * s)), tag, font=tf, fill=(170, 195, 240, 255))
+    return layer
+
+
+def put_strap(frame, strap, style, s, c) -> None:
+    """Strap on the frame, fading out as the news visual takes over the screen (c = cutaway progress)."""
+    if strap is None or c >= 1:
+        return
+    layer = strap if c <= 0 else strap.copy()
+    if c > 0:
+        layer.putalpha(layer.getchannel("A").point(lambda v: int(v * (1 - c))))
+    x, y = STRAP_POS[style]
+    frame.alpha_composite(layer, (int(x * s), int(y * s)))
+
+
 def cutaway_plan(n: int, seed: str, chance: float) -> np.ndarray:
     """Per-frame cutaway progress 0..1: 0 = presenter + monitor, 1 = news visual fills the screen, presenter gone.
     Some stories (decided by the seed) get one cutaway from ~25% to ~80% of the clip; the voice never stops."""
@@ -350,7 +387,7 @@ def extract_poster(mp4, jpg=None) -> Path:
 
 
 def render_video(audio_path, out_mp4, presenter: Presenter, headline, monitor_image, credit="", channel="BOUGHT.",
-                 font_path=None, seed="", cutaway_chance=0.6, moods=None, cut_ranges=None) -> None:
+                 font_path=None, seed="", cutaway_chance=0.6, moods=None, cut_ranges=None, journalist=None) -> None:
     out_mp4 = Path(out_mp4)
     tmp = out_mp4.with_suffix(".mp4.tmp")
     size, s = presenter.size, presenter.s
@@ -359,6 +396,7 @@ def render_video(audio_path, out_mp4, presenter: Presenter, headline, monitor_im
     mo = motion(env, seed)
     cut = plan_from_ranges(n, cut_ranges) if cut_ranges is not None else cutaway_plan(n, seed, cutaway_chance)
     over = overlay_layer(size, headline, channel, font_path)
+    strap = name_strap(size, journalist, font_path)
     shot = Visual(monitor_image)
     cf = _font(font_path, max(9, int(15 * s)))
     credit = credit if len(credit) < 48 else credit[:45] + "..."
@@ -405,6 +443,7 @@ def render_video(audio_path, out_mp4, presenter: Presenter, headline, monitor_im
                 d.text((box[2] - bez - tw - 10 * s, box[3] - bez - 24 * s), credit, font=cf, fill=(255, 255, 255, 235),
                        stroke_width=1, stroke_fill=(0, 0, 0, 200))
             frame.alpha_composite(over)
+            put_strap(frame, strap, "studio", s, c)
             p.stdin.write(frame.convert("RGB").tobytes())
         p.stdin.close()
         if p.wait(timeout=300) != 0:

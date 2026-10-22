@@ -82,7 +82,8 @@ def _synthesize(script: str, wav_out: Path, cfg, speed: float) -> None:
     wav_out.parent.mkdir(parents=True, exist_ok=True)
     tmp_raw, tmp_out = wav_out.with_suffix(".raw.wav"), wav_out.with_suffix(".tmp.wav")
     try:
-        cmd = [a.replace("{wav}", str(tmp_raw)).replace("{speed}", str(speed)) for a in cfg.tts_command]
+        voice = cfg.tts_voices[0] if cfg.tts_voices else ""      # one steady voice for the whole episode
+        cmd = [a.replace("{wav}", str(tmp_raw)).replace("{speed}", str(speed)).replace("{voice}", voice) for a in cfg.tts_command]
         _run(cmd, input=script.encode(), timeout=cfg.tts_timeout_seconds)
         _run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(tmp_raw), "-ar", str(RATE), "-ac", "1",
               "-sample_fmt", "s16", str(tmp_out)])

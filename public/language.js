@@ -1,19 +1,18 @@
 const popularLanguages = [
   ['English', 'en'],
   ['Mandarin Chinese', 'zh-CN'],
-  ['Hindi', 'hi-IN'],
   ['Spanish', 'es-ES'],
-  ['Arabic', 'ar'],
   ['French', 'fr-FR'],
-  ['Bengali', 'bn-BD'],
   ['Portuguese', 'pt-BR'],
   ['Russian', 'ru-RU'],
   ['Japanese', 'ja-JP'],
+  ['Hindi', 'hi-IN'],
+  ['Arabic', 'ar'],
 ];
 
 const otherLanguages = [
   ['Afrikaans', 'af'], ['Albanian', 'sq'], ['Amharic', 'am'],
-  ['Armenian', 'hy'], ['Azerbaijani', 'az'], ['Basque', 'eu'],
+  ['Armenian', 'hy'], ['Azerbaijani', 'az'], 
   ['Burmese', 'my'], ['Catalan', 'ca'], ['Czech', 'cs'],
   ['Danish', 'da'], ['Dutch', 'nl'], ['Filipino', 'fil'],
   ['Finnish', 'fi'], ['Georgian', 'ka'], ['German', 'de'],
@@ -25,9 +24,14 @@ const otherLanguages = [
   ['Persian', 'fa'], ['Polish', 'pl'], ['Punjabi', 'pa'],
   ['Romanian', 'ro'], ['Serbian', 'sr'], ['Sinhala', 'si'],
   ['Slovak', 'sk'], ['Swahili', 'sw'], ['Swedish', 'sv'],
-  ['Tamil', 'ta'], ['Telugu', 'te'], ['Thai', 'th'],
+  ['Tamil', 'ta'], ['Thai', 'th'],
   ['Turkish', 'tr'], ['Ukrainian', 'uk'], ['Urdu', 'ur'],
   ['Uzbek', 'uz'], ['Vietnamese', 'vi'], ['Welsh', 'cy'],
+  ['Asturian', 'ast'], ['Belarusian', 'be'], ['Bosnian', 'bs'], ['Breton', 'br'],
+  ['Bulgarian', 'bg'], ['Croatian', 'hr'], ['Estonian', 'et'], ['Frisian', 'fy'],
+  ['Galician', 'gl'], ['Irish', 'ga'], ['Latvian', 'lv'], ['Lithuanian', 'lt'],
+  ['Luxembourgish', 'lb'], ['Macedonian', 'mk'], ['Occitan', 'oc'],
+  ['Scottish Gaelic', 'gd'], ['Slovenian', 'sl'],
 ].sort((a, b) => a[0].localeCompare(b[0], 'en'));
 
 const picker = document.querySelector('.language-picker');
@@ -60,9 +64,6 @@ const uiText = {
   ar: { 'nav.newspaper': 'الصحيفة', 'nav.podcast': 'بودكاست', 'sec.prime': 'الأبرز', 'sec.swipe': 'بطاقات التمرير', 'sec.glance': 'العالم بنظرة سريعة',
     'done.issue': 'عدد اليوم', 'done.up': 'أنت على اطلاع كامل.', 'done.seal': 'اكتمل عدد اليوم', 'menu.heading': 'اقرأ بلغتك',
     'pod.eyebrow': 'الموجز اليومي', 'pod.title': 'موجز Bought اليوم', 'pod.lineup': 'عناوين اليوم.', 'pod.inbrief': 'في هذا الموجز', 'pod.audio': 'الصوت بالإنجليزية' },
-  'bn-BD': { 'nav.newspaper': 'সংবাদপত্র', 'nav.podcast': 'পডকাস্ট', 'sec.prime': 'প্রধান খবর', 'sec.swipe': 'সোয়াইপ কার্ড', 'sec.glance': 'এক নজরে বিশ্ব',
-    'done.issue': 'আজকের সংস্করণ', 'done.up': 'আপনি আপ টু ডেট।', 'done.seal': 'দৈনিক সংস্করণ সম্পূর্ণ', 'menu.heading': 'আপনার ভাষায় পড়ুন',
-    'pod.eyebrow': 'দৈনিক ব্রিফ', 'pod.title': 'আজকের Bought ব্রিফ', 'pod.lineup': 'আজকের শিরোনাম।', 'pod.inbrief': 'এই ব্রিফে', 'pod.audio': 'অডিও ইংরেজিতে' },
   'ru-RU': { 'nav.newspaper': 'Газета', 'nav.podcast': 'Подкаст', 'sec.prime': 'Главное', 'sec.swipe': 'Карточки', 'sec.glance': 'Мир вкратце',
     'done.issue': 'Выпуск сегодня', 'done.up': 'Вы в курсе всех новостей.', 'done.seal': 'Ежедневный выпуск завершён', 'menu.heading': 'Читайте на своём языке',
     'pod.eyebrow': 'Ежедневный брифинг', 'pod.title': 'Брифинг Bought на сегодня', 'pod.lineup': 'Заголовки дня.', 'pod.inbrief': 'В этом брифинге', 'pod.audio': 'Аудио на английском' },

@@ -409,6 +409,8 @@ if (window.liveFeed && window.liveFeed.prime && window.liveFeed.prime.length) {
   })));
 }
 
+const JOURNALIST_NAME = 'Nastya';
+
 function renderStory(story, number, saveKey = number) {
   const loading = number === 1 ? 'eager' : 'lazy';
   return `
@@ -434,7 +436,7 @@ function renderStory(story, number, saveKey = number) {
 
       <div class="story-copy">
         <div class="story-meta">
-          <span class="story-tags"><span class="story-section">${escapeStoryText(story.category)}</span>${renderBadges(story.badges)}</span>
+          <span class="story-tags"><span class="story-section">${escapeStoryText(story.category)}</span>${renderBadges(story.badges)}<span class="story-byline">By ${JOURNALIST_NAME}</span></span>
           <div class="story-actions">
             <button class="story-action" type="button" data-action="save" aria-label="Save story ${number}" aria-pressed="false" title="Save story">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 4.5h12v15l-6-4-6 4z" /></svg>
@@ -499,7 +501,7 @@ function renderGlances() {
     const image = visualSet[visualIndex % visualSet.length];
     const imageSide = index % 2 === 0 ? 'start' : 'end';
     const item = `
-      <article class="glance-item ${categoryClass(story.category)}${story.deck ? '' : ' is-brief'} is-image-${imageSide}" id="story-${number}" aria-labelledby="glance-title-${number}">
+      <article class="glance-item ${categoryClass(story.category)}${story.deck ? '' : ' is-brief'} is-image-${imageSide}${index === 0 ? ' is-feature' : index === 5 ? ' is-wide' : ''}" id="story-${number}" aria-labelledby="glance-title-${number}">
         <div class="glance-visual" aria-hidden="true"><img src="${image}" alt="" loading="${index < 4 ? 'eager' : 'lazy'}"><span class="glance-image-number">${number} / 50</span></div>
         <div class="glance-copy">
           <div class="glance-meta"><span class="glance-tags"><span class="glance-category">${escapeStoryText(story.category)}</span>${renderBadges(story.badges)}</span><span class="sr-only">Story ${number} of 50</span></div>

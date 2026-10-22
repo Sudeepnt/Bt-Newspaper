@@ -19,7 +19,7 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 # the picker's locale -> the translator's language code
-M2M = {"zh-CN": "zh", "hi-IN": "hi", "es-ES": "es", "fr-FR": "fr", "bn-BD": "bn", "pt-BR": "pt", "ru-RU": "ru",
+M2M = {"zh-CN": "zh", "hi-IN": "hi", "es-ES": "es", "fr-FR": "fr", "pt-BR": "pt", "ru-RU": "ru",
        "ja-JP": "ja", "fil": "tl", "nb": "no", "sr": "sr", "he": "he"}
 
 

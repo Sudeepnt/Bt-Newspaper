@@ -22,6 +22,10 @@ og_max_per_source: 15      # article-page fetches per source per run
 # Example for Piper (MIT voices only; check each voice's licence):
 #   media_enabled: true
 #   tts_command: ["piper", "--model", "/opt/voices/en_US-lessac-medium.onnx", "--output_file", "{wav}"]
+# The newsroom voice (Kokoro, Apache-2.0, CPU). List one voice, or several and the stories take turns; "a+b" blends two voices.
+tts_command: ["/Users/sudeepnt/.cache/bought/tts/venv/bin/python", "pipeline/tts_kokoro.py", "/Users/sudeepnt/.cache/bought/tts/kokoro-v1.0.int8.onnx", "/Users/sudeepnt/.cache/bought/tts/voices-v1.0.bin", "{voice}", "{wav}", "{speed}"]
+tts_voices: [af_heart]               # candidates: af_river, af_jessica, "af_nova+af_kore"
+tts_speed: 1.0
 media_enabled: false
 audio_base_url: "/media"
 media_time_budget_seconds: 900
@@ -33,6 +37,8 @@ avatar_enabled: false
 avatar_image: "pipeline/assets/presenter_cutout.png"
 avatar_size: [1280, 720]   # 16:9 (720p)
 avatar_channel: "BOUGHT."
+avatar_name: "Nastya"                 # name strap under the presenter in every video; "" for none
+avatar_name_tag: "AI JOURNALIST"
 avatar_cutaway_chance: 0.6   # 0 = never go full screen
 
 # One look per category (host + set), so videos are told apart at a glance. Delete this block for the original look everywhere.
@@ -44,6 +50,11 @@ avatar_looks:
   Founders & startups: {character: anime,  style: funky}
   Product launches:    {character: mascot, style: studio}
 
+# The top stories of the feed all get one look (the first story's), so the page is consistent.
+avatar_first_look: {character: anime, style: channel}
+avatar_first_count: 25            # every prime story
+avatar_credit_on_video: false       # true writes the photo credit on the picture inside the video
+
 # Badges on stories (New, Exclusive, and Most viewed / read / glanced once the page's collector writes engagement_file).
 badges_enabled: true
 badges_exclusive_sources: []        # outlets we have an exclusive arrangement with; nothing is "Exclusive" otherwise
@@ -52,7 +63,7 @@ badges_min_events: 30               # a "most" badge needs at least this many vi
 engagement_file: ""                 # JSON {article_id: {views, reads, glances}}
 
 
-# Translations for the page's language picker (offline; see translate_m2m.py: M2M100, MIT, `pip install transformers torch sentencepiece`).
-# Locales are the picker's. Stories/headlines are translated; video and podcast audio stay English.
-# translate_languages: [zh-CN, hi-IN, es-ES, ar, fr-FR, bn-BD, pt-BR, ru-RU, ja-JP]
-# translate_command: ["/path/to/venv/bin/python", "pipeline/translate_m2m.py", "{lang}"]
+# Translations for the page's language picker (offline, CPU only; see translate_m2m.py: M2M100 via CTranslate2, both MIT; `pip install -r pipeline/requirements-translate.txt`).
+# Locales are the picker's; every language in the picker is listed (all within M2M100's 100 languages). Stories/headlines are translated; video and podcast audio stay English.
+translate_languages: [zh-CN, hi-IN, es-ES, ar, fr-FR, pt-BR, ru-RU, ja-JP, af, sq, am, hy, az, my, ca, cs, da, nl, fil, fi, ka, de, el, gu, he, hu, is, id, it, kn, ko, ms, ml, mr, ne, nb, or, fa, pl, pa, ro, sr, si, sk, sw, sv, ta, th, tr, uk, ur, uz, vi, cy, ast, be, bs, br, bg, hr, et, fy, gl, ga, lv, lt, lb, mk, oc, gd, sl]
+translate_command: ["/usr/bin/python3", "pipeline/translate_m2m.py", "{lang}", "/Users/sudeepnt/.cache/bought/m2m100_ct2"]

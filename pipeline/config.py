@@ -47,6 +47,8 @@ class Config:
     media_enabled: bool = False
     tts_command: tuple = ()
     tts_timeout_seconds: float = 120
+    tts_voices: tuple = ()                     # the newsroom's voices; the stories take turns ({voice} in tts_command)
+    tts_speed: float = 1.0                     # {speed} for story audio (the podcast has podcast_speed)
     audio_base_url: str = "/media"
     media_time_budget_seconds: float = 900     # keeps a 30-min cron from overlapping itself
     media_max_attempts: int = 3
@@ -76,10 +78,15 @@ class Config:
     avatar_size: tuple = (1280, 720)           # 16:9 news frame, the native design size (no downscaling)
     avatar_font: str = "public/assets/font-0.ttf"
     avatar_channel: str = "BOUGHT."
+    avatar_name: str = ""                      # journalist name strap under the presenter ("" = none)
+    avatar_name_tag: str = "AI JOURNALIST"     # small line after the name
     avatar_cutaway_chance: float = 0.6         # share of stories where the visual goes full screen and she steps out
     # A look per category = which host and which set: {category: {character: photo|anime|mascot, style: studio|channel|funky}}.
     # Empty = every video uses the original photo presenter in the blue studio. Unlisted categories rotate through the looks.
     avatar_looks: dict = field(default_factory=dict)
+    avatar_first_look: dict = field(default_factory=dict)   # {character, style} for the top avatar_first_count stories of the feed
+    avatar_first_count: int = 0
+    avatar_credit_on_video: bool = False       # photo credit written on the picture inside the video
     avatar_fallback_keywords: dict = field(default_factory=lambda: {   # stand-in picture -> words that pick it
         "public/assets/swipe-data-center.jpg": ["chip", "chips", "chipmakers", "processors", "data", "cloud", "server",
                                                 "servers", "capacity", "computing", "quantum", "semiconductor", "network", "operating",
@@ -104,8 +111,9 @@ def load_config(path=None) -> Config:
     unknown = set(raw) - set(Config.__dataclass_fields__)
     if unknown:
         raise ConfigError(f"unknown config keys: {sorted(unknown)}")
-    if isinstance(raw.get("tts_command"), list):
-        raw["tts_command"] = tuple(map(str, raw["tts_command"]))
+    for key in ("tts_command", "tts_voices"):
+        if isinstance(raw.get(key), list):
+            raw[key] = tuple(map(str, raw[key]))
     for key in ("translate_languages", "translate_command"):
         if isinstance(raw.get(key), list):
             raw[key] = tuple(map(str, raw[key]))
@@ -122,6 +130,8 @@ def load_config(path=None) -> Config:
         raise ConfigError("slots must define non-negative ints for prime, cards, glance")
     if not 0 < cfg.category_cap <= 1:
         raise ConfigError("category_cap must be in (0, 1]")
+    if cfg.avatar_first_look and not {"character", "style"} <= set(cfg.avatar_first_look):
+        raise ConfigError("avatar_first_look needs character and style")
     for cat, look in cfg.avatar_looks.items():
         if not isinstance(look, dict) or look.get("character") not in ("photo", "anime", "mascot") \
                 or look.get("style") not in ("studio", "channel", "funky"):

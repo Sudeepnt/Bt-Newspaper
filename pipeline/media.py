@@ -54,12 +54,19 @@ def _run(cmd, **kw):
                            f"{(e.stderr or b'').decode(errors='replace').strip()[-200:]}") from None
 
 
-def synthesize(script: str, out_mp3: Path, cfg, speed: float = 1.0) -> float:
+def pick_voice(rank, cfg) -> str:
+    """The voice for the story at this place in the feed: the voices take turns, so neighbours never sound alike."""
+    voices = cfg.tts_voices
+    return voices[(rank or 0) % len(voices)] if voices else ""
+
+
+def synthesize(script: str, out_mp3: Path, cfg, speed=None, voice: str = "") -> float:
     """TTS -> wav -> mp3 via a temp file, then atomic rename. Returns duration in seconds."""
     out_mp3.parent.mkdir(parents=True, exist_ok=True)
     wav, tmp = out_mp3.with_suffix(".wav.tmp"), out_mp3.with_suffix(".mp3.tmp")
     try:
-        cmd = [a.replace("{wav}", str(wav)).replace("{speed}", str(speed)) for a in cfg.tts_command]
+        speed = cfg.tts_speed if speed is None else speed
+        cmd = [a.replace("{wav}", str(wav)).replace("{speed}", str(speed)).replace("{voice}", voice) for a in cfg.tts_command]
         _run(cmd, input=script.encode(), timeout=cfg.tts_timeout_seconds)
         _run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav), "-f", "mp3", "-b:a", "64k", str(tmp)])
         out = _run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -78,17 +85,20 @@ def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize, 
     stats = {"made": 0, "skipped": 0, "failed": 0, "deferred": 0}
     video_cache = {}  # presenters, built once per run (one per look)
     ticker = [i["headline"] for i in feed["prime"]]
+    ranks = {i["id"]: n for n, i in enumerate(feed["prime"])}   # place in the feed: the top stories share one look
     deadline = time.monotonic() + cfg.media_time_budget_seconds
     for item in sorted(feed["prime"], key=lambda i: i["published_at"], reverse=True):  # newest first
         script = item["script"]
+        voice = pick_voice(ranks[item["id"]], cfg)
+        key = script_hash(script + "|" + voice) if voice else script_hash(script)
         row = conn.execute("SELECT * FROM assets WHERE article_id=? AND kind='audio'", (item["id"],)).fetchone()
         path = out_dir / f"{item['id']}.mp3"
-        if row and row["status"] == "ok" and row["script_hash"] == script_hash(script) and path.exists():
+        if row and row["status"] == "ok" and row["script_hash"] == key and path.exists():
             stats["skipped"] += 1
             if cfg.avatar_enabled:
-                _video(conn, cfg, item, path, out_dir, now_iso, video_cache, fetch_images, ticker)
+                _video(conn, cfg, item, path, out_dir, now_iso, video_cache, fetch_images, ticker, ranks[item["id"]])
             continue
-        same_script = row and row["script_hash"] == script_hash(script)
+        same_script = row and row["script_hash"] == key
         if row and row["status"] == "failed" and same_script and row["attempts"] >= cfg.media_max_attempts:
             stats["failed"] += 1
             continue
@@ -97,7 +107,7 @@ def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize, 
             continue
         attempts = (row["attempts"] if same_script and row else 0) + 1
         try:
-            duration = synth(script, path, cfg)
+            duration = synth(script, path, cfg, voice=voice) if voice else synth(script, path, cfg)
             status, err = "ok", None
         except Exception as e:  # one bad story must not stop the rest
             duration, status, err = None, "failed", f"{type(e).__name__}: {e}"[:300]
@@ -108,10 +118,10 @@ def build_media(conn, cfg, feed: dict, out_dir, now_iso: str, synth=synthesize, 
                 " VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(article_id,kind) DO UPDATE SET path=excluded.path,"
                 " script_hash=excluded.script_hash, duration_s=excluded.duration_s, status=excluded.status,"
                 " attempts=excluded.attempts, error=excluded.error, updated_at=excluded.updated_at",
-                (item["id"], "audio", path.name, script_hash(script), duration, status, attempts, err, now_iso))
+                (item["id"], "audio", path.name, key, duration, status, attempts, err, now_iso))
         stats["made" if status == "ok" else "failed"] += 1
         if status == "ok" and cfg.avatar_enabled:
-            _video(conn, cfg, item, path, out_dir, now_iso, video_cache, fetch_images, ticker)
+            _video(conn, cfg, item, path, out_dir, now_iso, video_cache, fetch_images, ticker, ranks[item["id"]])
     return stats
 
 
@@ -123,10 +133,14 @@ def _poster(avatar, path) -> None:
         log.warning("poster failed for %s: %s", path.name, e)
 
 
-def video_hash(item, cfg) -> str:
+RENDER_VERSION = "2"   # bump when the look of every video changes (v2: no photo credit on the picture, name strap)
+
+
+def video_hash(item, cfg, rank=None) -> str:
     """Changes when the script or the story's look changes, so a new look re-renders its video."""
     from .styles import pick_look
-    return script_hash(item["script"] + "|" + "|".join(pick_look(item, cfg)))
+    return script_hash(item["script"] + "|" + "|".join(pick_look(item, cfg, rank)) + "|" + cfg.avatar_name
+                       + "|" + RENDER_VERSION + str(cfg.avatar_credit_on_video) + "|" + pick_voice(rank, cfg))
 
 
 def _subhead(item, limit=96) -> str:
@@ -136,14 +150,14 @@ def _subhead(item, limit=96) -> str:
     return text if len(text) <= limit else text[:limit - 3].rsplit(" ", 1)[0] + "..."
 
 
-def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True, ticker=()) -> None:
+def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True, ticker=(), rank=None) -> None:
     """Presenter video for one story; same skip/retry rules as audio, keyed on the script hash and look."""
     from . import avatar  # Pillow/numpy only needed when avatar_enabled
     from .styles import build_presenter, pick_look, render_styled
     root = Path(__file__).resolve().parent.parent
     resolve = lambda p: Path(p) if Path(p).is_absolute() else root / p
-    h = video_hash(item, cfg)
-    look = pick_look(item, cfg)
+    h = video_hash(item, cfg, rank)
+    look = pick_look(item, cfg, rank)
     path = out_dir / f"{item['id']}.mp4"
     row = conn.execute("SELECT * FROM assets WHERE article_id=? AND kind='video'", (item["id"],)).fetchone()
     same = row and row["script_hash"] == h
@@ -156,15 +170,17 @@ def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True, t
         if look not in cache:
             cache[look] = build_presenter(look[0], look[1], cfg, resolve)
         shot = _monitor_image(item, cfg, out_dir, resolve, fetch_images)
-        credit = item.get("image_credit") or ""
+        credit = (item.get("image_credit") or "") if cfg.avatar_credit_on_video else ""
         if look[1] == "studio":
             avatar.render_video(audio, path, cache[look], item["headline"], shot, credit, cfg.avatar_channel,
-                                resolve(cfg.avatar_font), seed=item["id"], cutaway_chance=cfg.avatar_cutaway_chance)
+                                resolve(cfg.avatar_font), seed=item["id"], cutaway_chance=cfg.avatar_cutaway_chance,
+                                journalist=(cfg.avatar_name, cfg.avatar_name_tag))
         else:
             render_styled(look[1], audio, path, cache[look], item["headline"], shot, credit, cfg.avatar_channel,
                           resolve(cfg.avatar_font), seed=item["id"], cutaway_chance=cfg.avatar_cutaway_chance,
                           category=item.get("category", ""), ticker=[t for t in ticker if t != item["headline"]][:8],
-                          script=item["script"], subhead=_subhead(item))
+                          script=item["script"], subhead=_subhead(item), journalist=(cfg.avatar_name, cfg.avatar_name_tag))
+        path.with_suffix(".jpg").unlink(missing_ok=True)     # a new render needs a new still, not the old video's
         _poster(avatar, path)
         status, err = "ok", None
     except Exception as e:
@@ -183,15 +199,16 @@ def attach_media(conn, cfg, feed: dict) -> None:
     """Add audio_url / duration_s to prime items that have finished audio."""
     conn.executescript(ASSETS_SCHEMA)
     base = cfg.audio_base_url.rstrip("/")
-    for item in feed["prime"]:
+    for rank, item in enumerate(feed["prime"]):
         r = conn.execute("SELECT * FROM assets WHERE article_id=? AND kind='audio' AND status='ok'",
                          (item["id"],)).fetchone()
-        ok = r and r["script_hash"] == script_hash(item["script"])
+        voice = pick_voice(rank, cfg)
+        ok = r and r["script_hash"] == (script_hash(item["script"] + "|" + voice) if voice else script_hash(item["script"]))
         item["audio_url"] = f"{base}/{r['path']}" if ok else None
         item["duration_s"] = r["duration_s"] if ok else None
         v = conn.execute("SELECT * FROM assets WHERE article_id=? AND kind='video' AND status='ok'",
                          (item["id"],)).fetchone()
-        vok = v and v["script_hash"] == video_hash(item, cfg)
+        vok = v and v["script_hash"] == video_hash(item, cfg, rank)
         if cfg.avatar_enabled:
             item["video_url"] = f"{base}/{v['path']}" if vok else None
             item["poster_url"] = f"{base}/{Path(v['path']).with_suffix('.jpg').name}" if vok else None

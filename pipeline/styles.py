@@ -16,10 +16,11 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
-from .avatar import (FPS, K_MAX, K_MIN, Visual, _font, _wrap, cutaway_plan, envelope, motion, plan_from_ranges,
+from .avatar import (FPS, K_MAX, K_MIN, Visual, _font, _wrap, cutaway_plan, envelope, motion, name_strap, plan_from_ranges, put_strap,
                      studio_background)
 
 DW, DH = 1280, 720
+TAG_DX = 150      # the channel set's LIVE | BOUGHT. tag sits right of the page's "n / 50" counter on the video's top-left
 INK = (20, 14, 40, 255)
 YELLOW = (255, 226, 40, 255)
 
@@ -159,8 +160,9 @@ class Channel:
         d.rectangle((int(30 * s), int(682 * s), int(150 * s), int(714 * s)), fill=(225, 30, 45, 255))
         _bold(d, (int(46 * s), int(686 * s)), "NEWS", _font(self.font_path, int(22 * s)), (255, 255, 255, 255), s, 0.9)
         # top-left: LIVE | BOUGHT
-        d.rectangle((int(30 * s), int(24 * s), int(108 * s), int(56 * s)), fill=(225, 30, 45, 255))
-        d.rectangle((int(108 * s), int(24 * s), int(236 * s), int(56 * s)), fill=(250, 251, 255, 255))
+        tx = TAG_DX
+        d.rectangle((int((30 + tx) * s), int(24 * s), int((108 + tx) * s), int(56 * s)), fill=(225, 30, 45, 255))
+        d.rectangle((int((108 + tx) * s), int(24 * s), int((236 + tx) * s), int(56 * s)), fill=(250, 251, 255, 255))
         return L
 
     def _ticker(self, items):
@@ -213,11 +215,11 @@ class Channel:
         d = ImageDraw.Draw(frame)
         pulse = 0.55 + 0.45 * math.sin(t * 2 * math.pi * 1.1)
         r = int(5 * s)
-        d.ellipse((int(40 * s), int(40 * s) - r, int(40 * s) + 2 * r, int(40 * s) + r), fill=(255, int(255 * pulse), int(255 * pulse), 255))
+        d.ellipse((int((40 + TAG_DX) * s), int(40 * s) - r, int((40 + TAG_DX) * s) + 2 * r, int(40 * s) + r), fill=(255, int(255 * pulse), int(255 * pulse), 255))
         lf = _font(self.font_path, int(19 * s))
-        _bold(d, (int(58 * s), int(28 * s)), "LIVE", lf, (255, 255, 255, 255), s, 0.7)
+        _bold(d, (int((58 + TAG_DX) * s), int(28 * s)), "LIVE", lf, (255, 255, 255, 255), s, 0.7)
         cw = d.textlength(self.channel, font=lf)
-        _bold(d, (int(172 * s - cw / 2), int(28 * s)), self.channel, lf, (14, 34, 86, 255), s, 0.7)
+        _bold(d, (int((172 + TAG_DX) * s - cw / 2), int(28 * s)), self.channel, lf, (14, 34, 86, 255), s, 0.7)
         bf = _font(self.font_path, int(40 * s))                        # logo, top right
         lw = d.textlength(self.channel, font=bf)
         _bold(d, (int(1244 * s - lw), int(22 * s)), self.channel, bf, (255, 255, 255, 255), s, 1.4)
@@ -497,9 +499,11 @@ def build_presenter(character, style, cfg, resolve):
     return Presenter(resolve(cfg.avatar_image), size)
 
 
-def pick_look(item, cfg):
+def pick_look(item, cfg, rank=None):
     """(character, style) for a story: its category's look from config, else one of the looks picked by the story id,
     so a feed never shows one identical video over and over. Without avatar_looks everything is the original look."""
+    if rank is not None and rank < cfg.avatar_first_count and cfg.avatar_first_look:
+        return (cfg.avatar_first_look["character"], cfg.avatar_first_look["style"])
     looks = cfg.avatar_looks
     if not looks:
         return ("photo", "studio")
@@ -515,13 +519,14 @@ def pick_look(item, cfg):
 
 def render_styled(style, audio_path, out_mp4, presenter, headline, image, credit="", channel="BOUGHT.", font_path=None,
                   seed="", moods=None, cut_ranges=None, cutaway_chance=0.6, category="", ticker=None, captions=None,
-                  laughs=(), subhead="", script="") -> None:
+                  laughs=(), subhead="", script="", journalist=None) -> None:
     out_mp4 = Path(out_mp4)
     tmp = out_mp4.with_suffix(".mp4.tmp")
     size, s = presenter.size, presenter.s
     env = envelope(audio_path)
     n = len(env)
     mo = motion(env, seed)
+    strap = name_strap(size, journalist, font_path)
     cut = plan_from_ranges(n, cut_ranges) if cut_ranges is not None else cutaway_plan(n, seed, cutaway_chance)
     if not captions and script:                                   # no timings: spread the script over the speech
         captions = [(0.35, max(1.0, n / FPS - 0.6), script)]
@@ -565,6 +570,7 @@ def render_styled(style, audio_path, out_mp4, presenter, headline, image, credit
             else:
                 st.draw(frame, i, n, t, c, e)
                 st.lower(frame, i, t)
+            put_strap(frame, strap, style, s, c)
             p.stdin.write(frame.convert("RGB").tobytes())
         p.stdin.close()
         if p.wait(timeout=600) != 0:
