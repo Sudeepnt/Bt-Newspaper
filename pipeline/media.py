@@ -133,14 +133,15 @@ def _poster(avatar, path) -> None:
         log.warning("poster failed for %s: %s", path.name, e)
 
 
-RENDER_VERSION = "2"   # bump when the look of every video changes (v2: no photo credit on the picture, name strap)
+RENDER_VERSION = "4"   # bump when the look of every video changes (v2: no photo credit, name strap; v3: LIVE tag top-left, no BOUGHT. in it; v4: LIVE tag clear of the page's counter on phones)
 
 
 def video_hash(item, cfg, rank=None) -> str:
     """Changes when the script or the story's look changes, so a new look re-renders its video."""
     from .styles import pick_look
     return script_hash(item["script"] + "|" + "|".join(pick_look(item, cfg, rank)) + "|" + cfg.avatar_name
-                       + "|" + RENDER_VERSION + str(cfg.avatar_credit_on_video) + "|" + pick_voice(rank, cfg))
+                       + "|" + RENDER_VERSION + str(cfg.avatar_credit_on_video) + "|" + pick_voice(rank, cfg)
+                       + (str(sorted(cfg.avatar_lead_presenter.items())) + str(cfg.avatar_lead_window_x) if rank == 0 else ""))
 
 
 def _subhead(item, limit=96) -> str:
@@ -167,19 +168,21 @@ def _video(conn, cfg, item, audio, out_dir, now_iso, cache, fetch_images=True, t
     if same and row["status"] == "failed" and row["attempts"] >= cfg.media_max_attempts:
         return
     try:
-        if look not in cache:
-            cache[look] = build_presenter(look[0], look[1], cfg, resolve)
+        who = look + ("lead",) if rank == 0 else look             # the first story gets its own (smaller) anchor
+        if who not in cache:
+            cache[who] = build_presenter(look[0], look[1], cfg, resolve, lead=rank == 0)
         shot = _monitor_image(item, cfg, out_dir, resolve, fetch_images)
         credit = (item.get("image_credit") or "") if cfg.avatar_credit_on_video else ""
         if look[1] == "studio":
-            avatar.render_video(audio, path, cache[look], item["headline"], shot, credit, cfg.avatar_channel,
+            avatar.render_video(audio, path, cache[who], item["headline"], shot, credit, cfg.avatar_channel,
                                 resolve(cfg.avatar_font), seed=item["id"], cutaway_chance=cfg.avatar_cutaway_chance,
                                 journalist=(cfg.avatar_name, cfg.avatar_name_tag))
         else:
-            render_styled(look[1], audio, path, cache[look], item["headline"], shot, credit, cfg.avatar_channel,
+            render_styled(look[1], audio, path, cache[who], item["headline"], shot, credit, cfg.avatar_channel,
                           resolve(cfg.avatar_font), seed=item["id"], cutaway_chance=cfg.avatar_cutaway_chance,
                           category=item.get("category", ""), ticker=[t for t in ticker if t != item["headline"]][:8],
-                          script=item["script"], subhead=_subhead(item), journalist=(cfg.avatar_name, cfg.avatar_name_tag))
+                          script=item["script"], subhead=_subhead(item), journalist=(cfg.avatar_name, cfg.avatar_name_tag),
+                          **({"window_x": cfg.avatar_lead_window_x} if rank == 0 and cfg.avatar_lead_window_x and look[1] == "channel" else {}))
         path.with_suffix(".jpg").unlink(missing_ok=True)     # a new render needs a new still, not the old video's
         _poster(avatar, path)
         status, err = "ok", None

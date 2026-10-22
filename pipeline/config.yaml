@@ -53,6 +53,11 @@ avatar_looks:
 # The top stories of the feed all get one look (the first story's), so the page is consistent.
 avatar_first_look: {character: anime, style: channel}
 avatar_first_count: 25            # every prime story
+avatar_rank_looks:
+  1: {character: anime, style: editorial}      # the second story: dark newsroom, big serif headline (pipeline/editorial.py)
+  2: {character: sheet, style: editorial}      # the third story: the character from the reference sheet (pipeline/sheet.py)
+avatar_lead_window_x: 432             # the first story's picture window starts here (others at 625), filling the space the smaller anchor leaves
+avatar_lead_presenter: {scale: 0.62, origin: [73, 138]}   # the first story's anchor is drawn smaller (the others use 0.95 at [8, 18])
 avatar_credit_on_video: false       # true writes the photo credit on the picture inside the video
 
 # Badges on stories (New, Exclusive, and Most viewed / read / glanced once the page's collector writes engagement_file).

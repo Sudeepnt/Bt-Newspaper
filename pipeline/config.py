@@ -86,6 +86,9 @@ class Config:
     avatar_looks: dict = field(default_factory=dict)
     avatar_first_look: dict = field(default_factory=dict)   # {character, style} for the top avatar_first_count stories of the feed
     avatar_first_count: int = 0
+    avatar_rank_looks: dict = field(default_factory=dict)   # {place in the feed (0 = first): {character, style}}, wins over the rest
+    avatar_lead_window_x: int = 0              # first story, channel set: left edge of the story window (default 625), wider when set
+    avatar_lead_presenter: dict = field(default_factory=dict)   # {scale, origin: [x, y]} for the anime anchor on the first story only
     avatar_credit_on_video: bool = False       # photo credit written on the picture inside the video
     avatar_fallback_keywords: dict = field(default_factory=lambda: {   # stand-in picture -> words that pick it
         "public/assets/swipe-data-center.jpg": ["chip", "chips", "chipmakers", "processors", "data", "cloud", "server",

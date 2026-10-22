@@ -20,7 +20,7 @@ from .avatar import (FPS, K_MAX, K_MIN, Visual, _font, _wrap, cutaway_plan, enve
                      studio_background)
 
 DW, DH = 1280, 720
-TAG_DX = 150      # the channel set's LIVE | BOUGHT. tag sits right of the page's "n / 50" counter on the video's top-left
+LIVE_X, LIVE_Y = 42, 98   # the LIVE tag: same left edge as the name strap, just under the page's "n / 50" counter on the video's top-left
 INK = (20, 14, 40, 255)
 YELLOW = (255, 226, 40, 255)
 
@@ -133,8 +133,10 @@ class Channel:
     """TV news channel set in the style of a broadcast: anchor large at centre-left, story window with a BREAKING
     caption top right, TOP STORY headline + sub-line, an UP NEXT panel, and a one-after-another news strip."""
 
-    def __init__(self, size, headline, image, credit, channel, font_path, category, ticker, subhead=""):
+    def __init__(self, size, headline, image, credit, channel, font_path, category, ticker, subhead="", window_x=625):
         self.size, self.s = size, size[0] / DW
+        self.wx = window_x                                            # left edge of the story window (design px)
+        self.wb = 396 + (30 if window_x < 625 else 0)                 # a wider window is also taller: the picture grows
         s = self.s
         self.font_path, self.channel, self.credit = font_path, channel, credit
         self.bgimg = broadcast_background((int(size[0] * 1.06), int(size[1] * 1.06)))
@@ -144,7 +146,7 @@ class Channel:
         self.subhead = subhead
         m = _measure()
         self.hfont, self.hlines = _fit(m, self.headline, font_path, (975 - 44) * s, 56 * s, s, hi=46, lo=22, max_lines=2)
-        self.wfont, self.wlines = _fit(m, self.headline, font_path, (619 - 24) * s, 68 * s, s, hi=28, lo=15, max_lines=2)
+        self.wfont, self.wlines = _fit(m, self.headline, font_path, (1244 - window_x - 24) * s, 68 * s, s, hi=28, lo=15, max_lines=2)
         self.sfont = _font(font_path, int(21 * s))
         self.cf = _font(font_path, max(9, int(14 * s)))
         self.items = [t for t in (ticker or [])] or ["The day's top stories, in a minute"]
@@ -159,10 +161,8 @@ class Channel:
         d.rectangle((0, int(676 * s), W, int(679 * s)), fill=(150, 200, 255, 255))
         d.rectangle((int(30 * s), int(682 * s), int(150 * s), int(714 * s)), fill=(225, 30, 45, 255))
         _bold(d, (int(46 * s), int(686 * s)), "NEWS", _font(self.font_path, int(22 * s)), (255, 255, 255, 255), s, 0.9)
-        # top-left: LIVE | BOUGHT
-        tx = TAG_DX
-        d.rectangle((int((30 + tx) * s), int(24 * s), int((108 + tx) * s), int(56 * s)), fill=(225, 30, 45, 255))
-        d.rectangle((int((108 + tx) * s), int(24 * s), int((236 + tx) * s), int(56 * s)), fill=(250, 251, 255, 255))
+        # top-left: LIVE (the BOUGHT. logo is at the top right)
+        d.rectangle((int(LIVE_X * s), int(LIVE_Y * s), int((LIVE_X + 90) * s), int((LIVE_Y + 32) * s)), fill=(225, 30, 45, 255))
         return L
 
     def _ticker(self, items):
@@ -179,15 +179,15 @@ class Channel:
 
     def draw(self, frame, i, n, t, c, e):
         s = self.s
-        win, full = (625, 84, 1244, 396), (0, 0, 1280, 520)           # photo; cutaway fills above the lower third
+        win, full = (self.wx, 80, 1244, self.wb), (0, 0, 1280, 520)           # photo; cutaway fills above the lower third
         box = [int(_lerp(win[k], full[k], c) * s) for k in range(4)]
         d = ImageDraw.Draw(frame)
         zoom = 1.0 + 0.04 * i / max(1, n - 1)
         if c < 1:
-            d.rectangle((box[0] - 2, box[1] - 2, box[2] + 2, box[3] + 2 + int(106 * s * (1 - c))), fill=(255, 255, 255, 255))
+            d.rectangle((box[0] - 2, box[1] - 2, box[2] + 2, box[3] + 2 + int((502 - self.wb) * s * (1 - c))), fill=(255, 255, 255, 255))
         frame.paste(self.shot.render(box[2] - box[0], box[3] - box[1], zoom), (box[0], box[1]))
         if c < 1:                                                      # BREAKING tag + caption under the photo
-            cap = (625, 396, 1244, 502)
+            cap = (self.wx, self.wb, 1244, 502)
             y0, y1 = int(cap[1] * s), int(cap[3] * s)
             keep = 1 - c
             if keep > 0.02:
@@ -215,11 +215,10 @@ class Channel:
         d = ImageDraw.Draw(frame)
         pulse = 0.55 + 0.45 * math.sin(t * 2 * math.pi * 1.1)
         r = int(5 * s)
-        d.ellipse((int((40 + TAG_DX) * s), int(40 * s) - r, int((40 + TAG_DX) * s) + 2 * r, int(40 * s) + r), fill=(255, int(255 * pulse), int(255 * pulse), 255))
+        dx, dy = int((LIVE_X + 14) * s), int((LIVE_Y + 16) * s)
+        d.ellipse((dx, dy - r, dx + 2 * r, dy + r), fill=(255, int(255 * pulse), int(255 * pulse), 255))
         lf = _font(self.font_path, int(19 * s))
-        _bold(d, (int((58 + TAG_DX) * s), int(28 * s)), "LIVE", lf, (255, 255, 255, 255), s, 0.7)
-        cw = d.textlength(self.channel, font=lf)
-        _bold(d, (int((172 + TAG_DX) * s - cw / 2), int(28 * s)), self.channel, lf, (14, 34, 86, 255), s, 0.7)
+        _bold(d, (int((LIVE_X + 34) * s), int((LIVE_Y + 4) * s)), "LIVE", lf, (255, 255, 255, 255), s, 0.7)
         bf = _font(self.font_path, int(40 * s))                        # logo, top right
         lw = d.textlength(self.channel, font=bf)
         _bold(d, (int(1244 * s - lw), int(22 * s)), self.channel, bf, (255, 255, 255, 255), s, 1.4)
@@ -485,15 +484,22 @@ CHARACTERS = ("photo", "anime", "mascot")
 STYLES = ("studio", "channel", "funky")
 
 
-def build_presenter(character, style, cfg, resolve):
+def build_presenter(character, style, cfg, resolve, lead=False):
     """The host for a look. The anime anchor is drawn larger and to the left for the channel set (as in the clips)."""
     size = tuple(cfg.avatar_size)
     if character == "mascot":
         from .mascot import MascotPresenter
         return MascotPresenter(size=size)
+    if character == "sheet":                                              # the character from the reference sheet
+        from .sheet import SheetPresenter
+        return SheetPresenter(resolve("pipeline/assets/sheet/neutral.png"), size, scale=1.65, origin=(690, 73), grade=False)
     if character == "anime":
         from .anime import AnimePresenter
         big = {"scale": 0.95, "origin": (8, 18)} if style == "channel" else {}
+        if style == "editorial":                                           # larger, on the right of the room
+            big = {"scale": 1.0, "origin": (600, 70)}
+        if lead and cfg.avatar_lead_presenter and style == "channel":      # the first story: a smaller anchor
+            big = {"scale": float(cfg.avatar_lead_presenter["scale"]), "origin": tuple(cfg.avatar_lead_presenter["origin"])}
         return AnimePresenter(resolve("pipeline/assets/anime/cutout_raw.png"), size, **big)
     from .avatar import Presenter
     return Presenter(resolve(cfg.avatar_image), size)
@@ -502,6 +508,8 @@ def build_presenter(character, style, cfg, resolve):
 def pick_look(item, cfg, rank=None):
     """(character, style) for a story: its category's look from config, else one of the looks picked by the story id,
     so a feed never shows one identical video over and over. Without avatar_looks everything is the original look."""
+    if rank is not None and rank in cfg.avatar_rank_looks:                  # a story at a fixed place gets its own look
+        return (cfg.avatar_rank_looks[rank]["character"], cfg.avatar_rank_looks[rank]["style"])
     if rank is not None and rank < cfg.avatar_first_count and cfg.avatar_first_look:
         return (cfg.avatar_first_look["character"], cfg.avatar_first_look["style"])
     looks = cfg.avatar_looks
@@ -519,7 +527,7 @@ def pick_look(item, cfg, rank=None):
 
 def render_styled(style, audio_path, out_mp4, presenter, headline, image, credit="", channel="BOUGHT.", font_path=None,
                   seed="", moods=None, cut_ranges=None, cutaway_chance=0.6, category="", ticker=None, captions=None,
-                  laughs=(), subhead="", script="", journalist=None) -> None:
+                  laughs=(), subhead="", script="", journalist=None, window_x=625) -> None:
     out_mp4 = Path(out_mp4)
     tmp = out_mp4.with_suffix(".mp4.tmp")
     size, s = presenter.size, presenter.s
@@ -527,11 +535,14 @@ def render_styled(style, audio_path, out_mp4, presenter, headline, image, credit
     n = len(env)
     mo = motion(env, seed)
     strap = name_strap(size, journalist, font_path)
-    cut = plan_from_ranges(n, cut_ranges) if cut_ranges is not None else cutaway_plan(n, seed, cutaway_chance)
+    cut = plan_from_ranges(n, cut_ranges) if cut_ranges is not None else cutaway_plan(n, seed, 0 if style == "editorial" else cutaway_chance)
     if not captions and script:                                   # no timings: spread the script over the speech
         captions = [(0.35, max(1.0, n / FPS - 0.6), script)]
     if style == "channel":
-        st = Channel(size, headline, image, credit, channel, font_path, category, ticker, subhead)
+        st = Channel(size, headline, image, credit, channel, font_path, category, ticker, subhead, window_x)
+    elif style == "editorial":
+        from .editorial import Editorial, grade
+        st = Editorial(size, headline, image, channel, font_path, Path(__file__).parent / "assets" / "newsreader.ttf", category, subhead, n / FPS)
     elif style == "funky":
         st = Funky(size, headline, image, credit, channel, font_path, category, ticker, captions, laughs)
     else:
@@ -551,11 +562,16 @@ def render_styled(style, audio_path, out_mp4, presenter, headline, image, credit
         for i, e in enumerate(env):
             t, c, e = i / FPS, float(cut[i]), float(e)
             frame = st.background(t)
+            if style == "editorial":
+                st.screen(frame, i, n)
             if c < 1:
                 pres = presenter.frame(K_MIN + (K_MAX - K_MIN) * e, blink_seq.get(i, 0), mo, i,
                                        moods[i] if moods is not None else "neutral")
                 ox0, oy0 = presenter.origin
-                if style == "funky":
+                if style == "editorial":
+                    pres = grade(pres) if getattr(presenter, "grade", True) else pres
+                    pos = (int(ox0 * s), int(oy0 * s))
+                elif style == "funky":
                     pres = st.sticker(pres, e, t)
                     pos = (int((ox0 - 4 - 120 * c) * s), int((oy0 - abs(math.sin(t * 5.2)) * 5 * e) * s))
                 else:
@@ -564,7 +580,9 @@ def render_styled(style, audio_path, out_mp4, presenter, headline, image, credit
                 if c > 0:
                     mask = mask.point(lambda v: int(v * (1 - c)))
                 frame.paste(pres, pos, mask)
-            if style == "funky":
+            if style == "editorial":
+                st.overlay(frame)
+            elif style == "funky":
                 card = st.card(frame, i, n, t, c, e)
                 st.overlay(frame, i, n, t, c, e, card)
             else:

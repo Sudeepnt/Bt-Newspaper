@@ -301,7 +301,7 @@ def overlay_layer(size, headline, channel, font_path) -> Image.Image:
     return layer
 
 
-STRAP_POS = {"studio": (40, 528), "channel": (42, 478), "funky": (40, 528)}   # design px, under the presenter
+STRAP_POS = {"studio": (40, 528), "channel": (42, 478), "funky": (40, 528), "editorial": (48, 226)}   # design px, under the presenter
 
 
 def name_strap(size, journalist, font_path) -> Image.Image | None:
