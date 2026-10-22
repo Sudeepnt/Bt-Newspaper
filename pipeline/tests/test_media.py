@@ -72,7 +72,7 @@ def test_avatar_video_made_and_in_feed(tmp_path):
                   avatar_size=(320, 180))
     res, feed, out = go(tmp_path, cfg)
     assert res["media"]["failed"] == 0
-    assert all(i["video_url"].endswith(".mp4") for i in feed["prime"])
+    assert all(i["video_url"].split("?")[0].endswith(".mp4") for i in feed["prime"])
     assert len(list((out.parent / "media").glob("*.mp4"))) == 25
 
 
@@ -165,8 +165,8 @@ def test_mixed_looks_render_with_different_hosts_and_sets(tmp_path):
     media = out.parent / "media"
     cats = {i["category"] for i in feed["prime"]}
     assert {"AI", "Technology", "Tech business"} <= cats
-    assert all(i.get("video_url") and (media / Path(i["video_url"]).name).exists() for i in feed["prime"])
-    sizes = {(media / Path(i["video_url"]).name).stat().st_size for i in feed["prime"]}
+    assert all(i.get("video_url") and (media / Path(i["video_url"].split("?")[0]).name).exists() for i in feed["prime"])
+    sizes = {(media / Path(i["video_url"].split("?")[0]).name).stat().st_size for i in feed["prime"]}
     assert len(sizes) > 5                                                                          # not 25 copies of one look
 
 

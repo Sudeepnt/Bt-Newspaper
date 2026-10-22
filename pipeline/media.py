@@ -213,8 +213,9 @@ def attach_media(conn, cfg, feed: dict) -> None:
                          (item["id"],)).fetchone()
         vok = v and v["script_hash"] == video_hash(item, cfg, rank)
         if cfg.avatar_enabled:
-            item["video_url"] = f"{base}/{v['path']}" if vok else None
-            item["poster_url"] = f"{base}/{Path(v['path']).with_suffix('.jpg').name}" if vok else None
+            ver = v["script_hash"][:8] if vok else ""   # a re-rendered video must not be served from the browser's cache
+            item["video_url"] = f"{base}/{v['path']}?v={ver}" if vok else None
+            item["poster_url"] = f"{base}/{Path(v['path']).with_suffix('.jpg').name}?v={ver}" if vok else None
 
 
 def _monitor_image(item, cfg, out_dir, resolve, fetch):
